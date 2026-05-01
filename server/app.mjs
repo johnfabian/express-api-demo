@@ -16,10 +16,4 @@ if (latencyMs > 0) {
 app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(apiSpec));
 app.use('/', todosRouter);
 
-if (process.env.EMBED_PGLITE === 'true') {
-    await import('./db/pglite.mjs');
-    const { startSocketBridge } = await import('./db/socket.mjs');
-    await startSocketBridge();
-}
-
 export default app;

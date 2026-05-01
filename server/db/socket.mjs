@@ -8,4 +8,5 @@ export async function startSocketBridge() {
     const server = new PGLiteSocketServer({ db: pgl, port, host });
     await server.start();
     console.log(`PGlite bridge listening on ${host}:${port}`);
+    return server;
 }
