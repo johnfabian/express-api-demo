@@ -13,7 +13,7 @@ if (latencyMs > 0) {
     console.log(`Simulating ${latencyMs}ms latency on every request (API_SIMULATED_LATENCY).`);
 }
 
-app.use('/swagger-ui/', swaggerUi.serve, swaggerUi.setup(apiSpec));
+app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(apiSpec));
 app.use('/', todosRouter);
 
 if (process.env.EMBED_PGLITE === 'true') {

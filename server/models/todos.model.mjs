@@ -1,5 +1,5 @@
 /**
- * @swagger
+ * @openapi
  * components:
  *   schemas:
  *     Todo:
@@ -27,7 +27,7 @@
  */
 
 /**
- * @swagger
+ * @openapi
  * /todos:
  *   get:
  *     tags: [Todos]
@@ -50,28 +50,37 @@
  *           minimum: 1
  *     responses:
  *       200:
- *         description: Either a full list of todos (no paging) or a single page with metadata.
+ *         description: Either a full list of todos (no paging) or a single page with metadata, wrapped in the base response envelope.
  *         content:
  *           application/json:
  *             schema:
- *               oneOf:
- *                 - type: array
- *                   items:
- *                     $ref: '#/components/schemas/Todo'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/BaseResponse'
  *                 - type: object
  *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/Todo'
- *                     total:
- *                       type: integer
- *                     page:
- *                       type: integer
- *                     pageSize:
- *                       type: integer
- *                     totalPages:
- *                       type: integer
+ *                     data:
+ *                       oneOf:
+ *                         - type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/Todo'
+ *                         - type: object
+ *                           properties:
+ *                             items:
+ *                               type: array
+ *                               items:
+ *                                 $ref: '#/components/schemas/Todo'
+ *                             total:
+ *                               type: integer
+ *                             page:
+ *                               type: integer
+ *                             pageSize:
+ *                               type: integer
+ *                             totalPages:
+ *                               type: integer
  *       400:
  *         description: Invalid page or pageSize query parameter.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BaseResponse'
  */
