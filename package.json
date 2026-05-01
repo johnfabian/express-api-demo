@@ -1,0 +1,14 @@
+{
+  "name": "express-api-demo",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client/express-client"
+  ],
+  "scripts": {
+    "dev": "bun --filter '*' dev",
+    "dev:server": "bun --filter express-server dev",
+    "dev:client": "bun --filter express-client dev",
+    "start": "bun --filter express-server start"
+  }
+}

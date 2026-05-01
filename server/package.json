@@ -1,5 +1,5 @@
 {
-  "name": "express-api-demo",
+  "name": "express-server",
   "type": "module",
   "private": true,
   "engines": {
@@ -13,6 +13,7 @@
   "dependencies": {
     "@electric-sql/pglite": "^0.4.5",
     "@electric-sql/pglite-socket": "^0.1.5",
+    "cors": "^2.8.6",
     "express": "^5.2.1",
     "postgres": "^3.4.9",
     "swagger-jsdoc": "^6.2.8",
