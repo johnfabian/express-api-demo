@@ -1,5 +1,8 @@
 {
   "watch": ["."],
-  "ext": "js,json",
-  "ignore": ["data/", "node_modules/"]
+  "ext": "mjs,json",
+  "ignore": ["data/", "node_modules/"],
+  "execMap": {
+    "mjs": "node --env-file=.env.development"
+  }
 }

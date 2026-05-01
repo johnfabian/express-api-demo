@@ -1,12 +1,12 @@
-import { getTodos, getTodosPaged } from '../repositories/todos.repository.js';
+import { getTodos, getTodosPaged } from '../repositories/todos.repository.mjs';
 
-export function getAllTodos(req, res) {
+export async function getAllTodos(req, res) {
     const hasPageSize = req.query.pageSize !== undefined;
     const hasPage = req.query.page !== undefined;
 
     try {
         if (!hasPageSize && !hasPage) {
-            return res.status(200).json(getTodos());
+            return res.status(200).json(await getTodos());
         }
 
         if (!hasPageSize) {
@@ -25,7 +25,7 @@ export function getAllTodos(req, res) {
             return res.status(400).json({ error: "Query param 'page' must be a positive integer." });
         }
 
-        res.status(200).json(getTodosPaged(page, pageSize));
+        res.status(200).json(await getTodosPaged(page, pageSize));
     } catch (error) {
         console.error("Error reading todos:", error);
         res.status(500).json({ error: "Failed to load todos data." });
