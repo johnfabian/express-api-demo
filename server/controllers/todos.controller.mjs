@@ -1,5 +1,14 @@
 import { getTodos, getTodosPaged } from '../repositories/todos.repository.mjs';
 
+const SORT_FIELDS = {
+    id: 'id',
+    title: 'title',
+    status: 'status',
+    priority: 'priority',
+    dueDate: 'due_date',
+    tags: 'tags',
+};
+
 function ok(data, message = 'Operation completed successfully') {
     return { status: 'success', code: 200, message, errors: [], data };
 }
@@ -13,6 +22,8 @@ export async function getAllTodos(req, res) {
     const hasPage = req.query.page !== undefined;
 
     try {
+
+        //get all if paging parameters are not passed
         if (!hasPageSize && !hasPage) {
             return res.status(200).json(ok(await getTodos()));
         }
@@ -37,7 +48,25 @@ export async function getAllTodos(req, res) {
             ]));
         }
 
-        res.status(200).json(ok(await getTodosPaged(page, pageSize)));
+        const sortField = req.query.sortField;
+        const sortOrder = req.query.sortOrder;
+
+        if (sortField !== undefined && !Object.hasOwn(SORT_FIELDS, sortField)) {
+            return res.status(400).json(fail(400, 'Invalid query parameters.', [
+                `Query param 'sortField' must be one of: ${Object.keys(SORT_FIELDS).join(', ')}.`,
+            ]));
+        }
+        if (sortOrder !== undefined && sortOrder !== 'asc' && sortOrder !== 'desc') {
+            return res.status(400).json(fail(400, 'Invalid query parameters.', [
+                "Query param 'sortOrder' must be 'asc' or 'desc'.",
+            ]));
+        }
+
+        const sortColumn = sortField ? SORT_FIELDS[sortField] : 'id';
+        const order = sortOrder ?? 'asc';
+
+        //get paged
+        res.status(200).json(ok(await getTodosPaged(page, pageSize, sortColumn, order)));
     } catch (error) {
         console.error("Error reading todos:", error);
         res.status(500).json(fail(500, 'Failed to load todos data.', [error.message]));

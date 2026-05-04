@@ -11,3 +11,15 @@ if (exists.rows[0].t === null) {
     await pgl.exec(initSql);
     console.log('Applied db/init.sql to fresh PGlite cluster');
 }
+
+await pgl.exec(`
+    CREATE OR REPLACE FUNCTION natural_sort_key(s text) RETURNS text AS $$
+        SELECT COALESCE(string_agg(
+            CASE WHEN part ~ '^\\d' THEN lpad(part, 20, '0') ELSE part END,
+            '' ORDER BY ord
+        ), '')
+        FROM regexp_matches(COALESCE(s, ''), '\\d+|\\D+', 'g')
+            WITH ORDINALITY AS t(m, ord),
+            LATERAL (SELECT m[1] AS part) p;
+    $$ LANGUAGE SQL IMMUTABLE;
+`);
