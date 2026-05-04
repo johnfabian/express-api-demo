@@ -7,9 +7,9 @@ const swaggerJsDocOptions = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'Todo List API',
+            title: 'App API',
             version: '1.0.0',
-            description: 'A simple API for to-do items, backed by PGlite (embedded Postgres). Demonstrates server-side paging.',
+            description: 'A simple API backed by PGlite (embedded Postgres). Demonstrates server-side paging and mixed YAML/Zod OpenAPI schemas.',
         },
         tags: [
             { name: 'Todos', description: 'To-do operations' },

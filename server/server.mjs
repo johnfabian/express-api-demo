@@ -13,7 +13,7 @@ if (process.env.EMBED_PGLITE === 'true') {
 }
 
 const httpServer = app.listen(port, () => {
-    console.log(`Todo API server running successfully on http://${host}:${port}`);
+    console.log(`App API server running successfully on http://${host}:${port}`);
     console.log(`Swagger Documentation available at: http://${host}:${port}/swagger-ui`);
 });
 

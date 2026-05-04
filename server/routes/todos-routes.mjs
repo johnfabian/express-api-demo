@@ -4,7 +4,7 @@ import { getAllTodos } from '../controllers/todos.controller.mjs';
 const router = Router();
 
 router.get('/', (req, res) => {
-    res.send('Welcome to the Todo API!');
+    res.send('Welcome to the App API!');
 });
 
 router.get('/todos', getAllTodos);
