@@ -11,13 +11,15 @@
     "nodemon": "^3.1.14"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@electric-sql/pglite": "^0.4.5",
     "@electric-sql/pglite-socket": "^0.1.5",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "postgres": "^3.4.9",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.4.3"
   },
   "scripts": {
     "start": "node --env-file=.env.production server.mjs",
