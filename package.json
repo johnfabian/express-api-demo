@@ -9,6 +9,7 @@
     "dev": "bun --filter '*' dev",
     "dev:server": "bun --filter express-server dev",
     "dev:client": "bun --filter express-client dev",
-    "start": "bun --filter express-server start"
+    "start": "bun --filter express-server start",
+    "stop-servers": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-servers.ps1"
   }
 }
