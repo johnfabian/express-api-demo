@@ -48,6 +48,20 @@
  *         schema:
  *           type: integer
  *           minimum: 1
+ *       - name: sortField
+ *         in: query
+ *         required: false
+ *         description: Field to sort by. Only applies when paging.
+ *         schema:
+ *           type: string
+ *           enum: [id, title, status, priority, dueDate, tags]
+ *       - name: sortOrder
+ *         in: query
+ *         required: false
+ *         description: Sort direction. Only applies when paging.
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
  *     responses:
  *       200:
  *         description: Either a full list of todos (no paging) or a single page with metadata, wrapped in the base response envelope.
