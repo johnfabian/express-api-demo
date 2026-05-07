@@ -34,11 +34,19 @@ On the first run, PGlite seeds `todos` (1000 rows) and `products` (50 rows) auto
 
 ```
   ───────────────────────────────────────────
-  Client UI:  http://localhost:5173
-  Server API: http://localhost:3000
-  Swagger:    http://localhost:3000/swagger-ui
+  Client UI:      http://localhost:5173
+  Server API:     http://localhost:3000
+  Swagger:        http://localhost:3000/swagger-ui
   ───────────────────────────────────────────
 ```
+
+If you launch via `npm run database` instead (starts the dev server **and** Drizzle Studio together), the banner adds one more line:
+
+```
+  Drizzle Studio: https://local.drizzle.studio
+```
+
+Drizzle Studio is just a web UI for browsing the PGlite data (tables, rows, ad-hoc queries) — it's a viewer, not part of the runtime API.
 
 ## Scripts
 
