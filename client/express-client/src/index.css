@@ -9,3 +9,7 @@ body {
 #root {
     min-height: 100vh;
 }
+
+.p-datatable-loading-overlay {
+    background: transparent !important;
+}

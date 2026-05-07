@@ -62,6 +62,38 @@
  *         schema:
  *           type: string
  *           enum: [asc, desc]
+ *       - name: q
+ *         in: query
+ *         required: false
+ *         description: Global search. Case-insensitive substring match across title, status, priority, and tags (OR-combined).
+ *         schema:
+ *           type: string
+ *       - name: title
+ *         in: query
+ *         required: false
+ *         description: Filter by title (case-insensitive substring match).
+ *         schema:
+ *           type: string
+ *       - name: status
+ *         in: query
+ *         required: false
+ *         description: Filter by exact status value.
+ *         schema:
+ *           type: string
+ *           enum: [Not-Started, In-Progress, Completed]
+ *       - name: priority
+ *         in: query
+ *         required: false
+ *         description: Filter by exact priority value.
+ *         schema:
+ *           type: string
+ *           enum: [Low, Medium, High]
+ *       - name: tags
+ *         in: query
+ *         required: false
+ *         description: Filter by tags (case-insensitive substring match).
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Either a full list of todos (no paging) or a single page with metadata, wrapped in the base response envelope.

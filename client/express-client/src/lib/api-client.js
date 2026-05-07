@@ -10,13 +10,14 @@ export class ApiError extends Error {
 }
 
 async function request(path, { body, headers, ...options } = {}) {
+    const hasBody = body !== undefined;
     const res = await fetch(`${API_URL}${path}`, {
         ...options,
         headers: {
-            'Content-Type': 'application/json',
+            ...(hasBody && { 'Content-Type': 'application/json' }),
             ...headers,
         },
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: hasBody ? JSON.stringify(body) : undefined,
     });
 
     const payload = await res.json();
