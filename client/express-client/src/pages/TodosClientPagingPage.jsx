@@ -10,10 +10,27 @@ export default function TodosPage() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        getTodos()
-            .then(setTodos)
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+        let cancelled = false;
+
+        async function load() {
+            try {
+                const result = await getTodos();
+                if (cancelled) return;
+                setTodos(result);
+                setError(null);
+            } catch (err) {
+                if (cancelled) return;
+                setError(err.message);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        }
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     return (
