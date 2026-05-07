@@ -13,8 +13,17 @@ if (process.env.EMBED_PGLITE === 'true') {
 }
 
 const httpServer = app.listen(port, () => {
-    console.log(`App API server running successfully on http://${host}:${port}`);
-    console.log(`Swagger Documentation available at: http://${host}:${port}/swagger-ui`);
+    const apiUrl = `http://${host}:${port}`;
+    const swaggerUrl = `${apiUrl}/swagger-ui`;
+    const clientUrl = process.env.CLIENT_URL;
+
+    console.log('');
+    console.log('  ───────────────────────────────────────────');
+    if (clientUrl) console.log(`  Client UI:  ${clientUrl}`);
+    console.log(`  Server API: ${apiUrl}`);
+    console.log(`  Swagger:    ${swaggerUrl}`);
+    console.log('  ───────────────────────────────────────────');
+    console.log('');
 });
 
 let shuttingDown = false;

@@ -62,12 +62,6 @@
  *         schema:
  *           type: string
  *           enum: [asc, desc]
- *       - name: q
- *         in: query
- *         required: false
- *         description: Global search. Case-insensitive substring match across title, status, priority, and tags (OR-combined).
- *         schema:
- *           type: string
  *       - name: title
  *         in: query
  *         required: false
