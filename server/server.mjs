@@ -17,12 +17,14 @@ const httpServer = app.listen(port, () => {
     const apiUrl = `http://${host}:${port}`;
     const swaggerUrl = `${apiUrl}/swagger-ui`;
     const clientUrl = process.env.CLIENT_URL;
+    const drizzleUrl = process.env.DRIZZLE_STUDIO_URL;
 
     console.log('');
     console.log('  ───────────────────────────────────────────');
-    if (clientUrl) console.log(`  Client UI:  ${clientUrl}`);
-    console.log(`  Server API: ${apiUrl}`);
-    console.log(`  Swagger:    ${swaggerUrl}`);
+    if (clientUrl)  console.log(`  Client UI:      ${clientUrl}`);
+    console.log(`  Server API:     ${apiUrl}`);
+    console.log(`  Swagger:        ${swaggerUrl}`);
+    if (drizzleUrl) console.log(`  Drizzle Studio: ${drizzleUrl}`);
     console.log('  ───────────────────────────────────────────');
     console.log('');
 });

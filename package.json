@@ -10,12 +10,15 @@
     "dev:server": "npm run dev --workspace=express-server",
     "dev:client": "npm run dev --workspace=express-client",
     "start": "npm run start --workspace=express-server",
-    "database": "npm run database --workspace=express-server",
+    "database": "cross-env DRIZZLE_STUDIO_URL=https://local.drizzle.studio concurrently -k -n server,studio -c blue,magenta \"npm run dev:server\" \"npm run database --workspace=express-server\"",
     "db:pull": "npm run db:pull --workspace=express-server",
     "db:reseed-products": "npm run db:reseed-products --workspace=express-server",
     "stop-servers": "bash scripts/stop-servers.sh"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "cross-env": "^10.1.0",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.44.7"
   }
 }

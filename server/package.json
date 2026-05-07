@@ -6,8 +6,6 @@
     "node": "^24.0.0"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.10",
-    "drizzle-orm": "^0.45.2",
     "nodemon": "^3.1.14"
   },
   "dependencies": {
