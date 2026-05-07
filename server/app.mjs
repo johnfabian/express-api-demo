@@ -17,7 +17,10 @@ if (latencyMs > 0) {
     console.log(`Simulating ${latencyMs}ms latency on every request (API_SIMULATED_LATENCY).`);
 }
 
+//use swagger
 app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(apiSpec));
+
+//routes
 app.use('/', todosRouter);
 app.use('/', productsRouter);
 

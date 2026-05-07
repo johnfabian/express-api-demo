@@ -25,7 +25,9 @@ const swaggerJsDocOptions = {
 const yamlSpec = swaggerJsDoc(swaggerJsDocOptions);
 
 const registry = new OpenAPIRegistry();
+
 registerProductsOpenApi(registry);
+
 const zodSpec = new OpenApiGeneratorV3(registry.definitions).generateDocument({
     openapi: '3.0.0',
     info: { title: 'App API', version: '1.0.0' },

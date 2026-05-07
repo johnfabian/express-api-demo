@@ -12,6 +12,7 @@ if (process.env.EMBED_PGLITE === 'true') {
     bridge = await startSocketBridge();
 }
 
+//create app server
 const httpServer = app.listen(port, () => {
     const apiUrl = `http://${host}:${port}`;
     const swaggerUrl = `${apiUrl}/swagger-ui`;

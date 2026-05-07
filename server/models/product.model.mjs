@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { BasePaging, BaseResponseZod } from './base-response-zod.model.mjs';
 
 extendZodWithOpenApi(z);
 
+// Entity model — the Product domain object as returned by the API.
 export const Product = z.object({
     id:          z.number().int().openapi({ example: 1 }),
     name:        z.string().openapi({ example: 'Wireless Earbuds' }),
@@ -12,26 +14,21 @@ export const Product = z.object({
     category:    z.string().openapi({ example: 'Electronics' }),
 }).openapi('Product');
 
-export const Products = z.array(Product).openapi('Products');
+// Paged response shape — extends BasePaging (total/page/pageSize/totalPages) with the items array.
+const Products = BasePaging.extend({
+    items: z.array(Product),
+}).openapi('Products');
 
-const ProductsPage = z.object({
-    items:      Products,
-    total:      z.number().int().openapi({ example: 50 }),
-    page:       z.number().int().openapi({ example: 1 }),
-    pageSize:   z.number().int().openapi({ example: 10 }),
-    totalPages: z.number().int().openapi({ example: 5 }),
-}).openapi('ProductsPage');
-
-const ProductsResponse = z.object({
-    status:  z.string().openapi({ example: 'success' }),
-    code:    z.number().int().openapi({ example: 200 }),
-    message: z.string().openapi({ example: 'Operation completed successfully' }),
-    errors:  z.array(z.string()).openapi({ example: [] }),
-    data:    z.union([Products, ProductsPage]),
+// Full HTTP envelope — extends BaseResponseZod (status/code/message/errors) with the data payload.
+// data is either a flat array (no paging) or a paged Products object.
+const ProductsResponse = BaseResponseZod.extend({
+    data: z.union([z.array(Product), Products]),
 }).openapi('ProductsResponse');
 
+// Match-mode enum reused across every filter field.
 const MatchMode = z.enum(['contains', 'notContains', 'startsWith', 'endsWith', 'equals', 'notEquals']);
 
+// Query parameters accepted by GET /products — paging, sorting, filtering.
 const ProductsQuery = z.object({
     page:      z.string().optional().openapi({ description: 'Page number (1-indexed). Requires pageSize.' }),
     pageSize:  z.string().optional().openapi({ description: 'Items per page. Omit to return all products.' }),
@@ -45,10 +42,12 @@ const ProductsQuery = z.object({
     categoryMatchMode:    MatchMode.optional().openapi({ description: 'Match mode for category filter (default: equals).' }),
 });
 
+// Wires the schemas above into the OpenAPI registry consumed by middleware/swagger.mjs.
 export function registerProductsOpenApi(registry) {
+    registry.register('BaseResponseZod', BaseResponseZod);
+    registry.register('BasePaging', BasePaging);
     registry.register('Product', Product);
     registry.register('Products', Products);
-    registry.register('ProductsPage', ProductsPage);
     registry.register('ProductsResponse', ProductsResponse);
 
     registry.registerPath({
