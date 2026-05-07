@@ -1,45 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Message } from 'primereact/message';
 import { getTodos } from '../services/todos-service.js';
 
 export default function TodosPage() {
-    const [todos, setTodos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function load() {
-            try {
-                const result = await getTodos();
-                if (cancelled) return;
-                setTodos(result);
-                setError(null);
-            } catch (err) {
-                if (cancelled) return;
-                setError(err.message);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-
-        load();
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+    const { data: todos = [], isLoading, error } = useQuery({
+        queryKey: ['todos'],
+        queryFn: getTodos,
+    });
 
     return (
         <section>
             <h1 className="text-2xl mb-3">Todos</h1>
-            {error && <Message severity="error" text={error} className="mb-3 w-full" />}
+            {error && <Message severity="error" text={error.message} className="mb-3 w-full" />}
             <DataTable
                 value={todos}
-                loading={loading}
+                loading={isLoading}
                 stripedRows
                 paginator
                 rows={10}

@@ -1,4 +1,4 @@
-import { api } from '../lib/api.js';
+import { api } from '../lib/api-client.js';
 
 export function getTodos() {
     return api.get('/todos');

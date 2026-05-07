@@ -1,54 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Message } from 'primereact/message';
 import { getTodosPaged } from '../services/todos-service.js';
 
 export default function TodosServerPagingPage() {
-    const [todos, setTodos] = useState([]);
-    const [totalRecords, setTotalRecords] = useState(0);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
     const [sortField, setSortField] = useState('id');
     const [sortOrder, setSortOrder] = useState(1);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        let cancelled = false;
-        const page = Math.floor(first / rows) + 1;
-        const order = sortOrder === -1 ? 'desc' : 'asc';
+    const page = Math.floor(first / rows) + 1;
+    const order = sortOrder === -1 ? 'desc' : 'asc';
 
-        async function load() {
-            try {
-                const result = await getTodosPaged(page, rows, sortField, order);
-                if (cancelled) return;
-                setTodos(result.items);
-                setTotalRecords(result.total);
-                setError(null);
-            } catch (err) {
-                if (cancelled) return;
-                setError(err.message);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-
-        load();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [first, rows, sortField, sortOrder]);
+    const { data, isFetching, error } = useQuery({
+        queryKey: ['todos', { page, rows, sortField, order }],
+        queryFn: () => getTodosPaged(page, rows, sortField, order),
+        placeholderData: keepPreviousData,
+    });
 
     const onPage = (event) => {
-        setLoading(true);
         setFirst(event.first);
         setRows(event.rows);
     };
 
     const onSort = (event) => {
-        setLoading(true);
         setFirst(0);
         setSortField(event.sortField);
         setSortOrder(event.sortOrder);
@@ -57,16 +34,16 @@ export default function TodosServerPagingPage() {
     return (
         <section>
             <h1 className="text-2xl mb-3">Todos (Server Paging)</h1>
-            {error && <Message severity="error" text={error} className="mb-3 w-full" />}
+            {error && <Message severity="error" text={error.message} className="mb-3 w-full" />}
             <DataTable
-                value={todos}
-                loading={loading}
+                value={data?.items ?? []}
+                loading={isFetching}
                 stripedRows
                 lazy
                 paginator
                 first={first}
                 rows={rows}
-                totalRecords={totalRecords}
+                totalRecords={data?.total ?? 0}
                 onPage={onPage}
                 sortField={sortField}
                 sortOrder={sortOrder}
