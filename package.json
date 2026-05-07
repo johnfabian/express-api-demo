@@ -10,6 +10,9 @@
     "dev:server": "npm run dev --workspace=express-server",
     "dev:client": "npm run dev --workspace=express-client",
     "start": "npm run start --workspace=express-server",
+    "database": "npm run database --workspace=express-server",
+    "db:pull": "npm run db:pull --workspace=express-server",
+    "db:reseed-products": "npm run db:reseed-products --workspace=express-server",
     "stop-servers": "bash scripts/stop-servers.sh"
   },
   "devDependencies": {

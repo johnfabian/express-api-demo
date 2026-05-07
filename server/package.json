@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": "24.15.0"
+    "node": "^24.0.0"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.10",
@@ -27,6 +27,7 @@
     "dev-nodemon": "nodemon server.mjs",
     "database": "drizzle-kit studio --config=drizzle.config.mjs",
     "db:pull": "drizzle-kit pull --config=drizzle.config.mjs && node db/post-pull.mjs",
+    "db:reseed-products": "node --env-file=.env.development db/reseed-products.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

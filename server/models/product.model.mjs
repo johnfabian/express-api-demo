@@ -5,8 +5,8 @@ extendZodWithOpenApi(z);
 
 export const Product = z.object({
     id:          z.number().int().openapi({ example: 1 }),
-    name:        z.string().openapi({ example: 'Product 1' }),
-    description: z.string().openapi({ example: 'High-quality item number 1' }),
+    name:        z.string().openapi({ example: 'Wireless Earbuds' }),
+    description: z.string().openapi({ example: 'Premium wireless earbuds with active noise cancellation' }),
     price:       z.number().openapi({ example: 19.99 }),
     stock:       z.number().int().openapi({ example: 42 }),
     category:    z.string().openapi({ example: 'Electronics' }),
@@ -30,11 +30,19 @@ const ProductsResponse = z.object({
     data:    z.union([Products, ProductsPage]),
 }).openapi('ProductsResponse');
 
+const MatchMode = z.enum(['contains', 'notContains', 'startsWith', 'endsWith', 'equals', 'notEquals']);
+
 const ProductsQuery = z.object({
     page:      z.string().optional().openapi({ description: 'Page number (1-indexed). Requires pageSize.' }),
     pageSize:  z.string().optional().openapi({ description: 'Items per page. Omit to return all products.' }),
     sortField: z.enum(['id', 'name', 'description', 'category']).optional(),
     sortOrder: z.enum(['asc', 'desc']).optional(),
+    name:                 z.string().optional().openapi({ description: 'Filter by name.' }),
+    nameMatchMode:        MatchMode.optional().openapi({ description: 'Match mode for name filter (default: contains).' }),
+    description:          z.string().optional().openapi({ description: 'Filter by description.' }),
+    descriptionMatchMode: MatchMode.optional().openapi({ description: 'Match mode for description filter (default: contains).' }),
+    category:             z.string().optional().openapi({ description: 'Filter by category.' }),
+    categoryMatchMode:    MatchMode.optional().openapi({ description: 'Match mode for category filter (default: equals).' }),
 });
 
 export function registerProductsOpenApi(registry) {
