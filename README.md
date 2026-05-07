@@ -1,12 +1,12 @@
 # express-api-demo
 
-Monorepo with an Express API server and a React (Vite) client. Demonstrates server-side and client-side paging/sorting/filtering, two styles of OpenAPI documentation (YAML/JSDoc vs Zod), and an embedded Postgres via [PGlite](https://pglite.dev/) which is for demo purposes only.
+Monorepo with an Express 4 API server and a React (Vite) client. Demonstrates server-side and client-side paging/sorting/filtering, two styles of OpenAPI documentation (YAML/JSDoc vs Zod), and an embedded Postgres via [PGlite](https://pglite.dev/) which is for demo purposes only.
 
 ## Structure
 
 ```
 .
-├── server/                # Express API (Node 24, ES modules)
+├── server/                # Express 4 API (Node 24, ES modules)
 │   ├── routes/            # /todos, /products
 │   ├── controllers/
 │   ├── repositories/
