@@ -6,6 +6,8 @@ import { InputText } from 'primereact/inputtext';
 import { Calendar } from 'primereact/calendar';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { BlockUI } from 'primereact/blockui';
+import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 
 const CATEGORY_OPTIONS = [
     { value: 'electronics', label: 'Electronics' },
@@ -65,6 +67,9 @@ const EMPTY_FORM = {
 export default function UiPatternsPage() {
     const [form, setForm] = useState(EMPTY_FORM);
     const [rows, setRows] = useState([]);
+    const [editingId, setEditingId] = useState(null);
+
+    const isEditing = editingId !== null;
 
     const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -87,8 +92,7 @@ export default function UiPatternsPage() {
     };
 
     const onSave = () => {
-        const row = {
-            id: rows.length ? rows[rows.length - 1].id + 1 : 1,
+        const built = {
             name: form.name,
             date: form.date,
             status: form.status,
@@ -97,8 +101,59 @@ export default function UiPatternsPage() {
                 subcategory: form.subSelections[cat] ?? null,
             })),
         };
-        setRows((prev) => [...prev, row]);
+        if (isEditing) {
+            setRows((prev) => prev.map((r) => (r.id === editingId ? { ...r, ...built } : r)));
+        } else {
+            const nextId = rows.length ? rows[rows.length - 1].id + 1 : 1;
+            setRows((prev) => [...prev, { id: nextId, ...built }]);
+        }
+        resetForm();
+    };
+
+    const resetForm = () => {
         setForm(EMPTY_FORM);
+        setEditingId(null);
+    };
+
+    const onEdit = (row) => {
+        const subSelections = {};
+        for (const c of row.categories) {
+            if (c.subcategory) subSelections[c.category] = c.subcategory;
+        }
+        setForm({
+            name: row.name,
+            date: row.date ? new Date(row.date) : null,
+            status: row.status,
+            categories: row.categories.map((c) => c.category),
+            subSelections,
+        });
+        setEditingId(row.id);
+    };
+
+    const confirmDelete = (event, row) => {
+        confirmPopup({
+            target: event.currentTarget,
+            message: (
+                <div className="flex align-items-center gap-2">
+                    <i className="pi pi-exclamation-triangle text-2xl text-orange-500" />
+                    <div>
+                        <div className="font-semibold">Delete this row?</div>
+                        <div className="text-sm text-color-secondary">"{row.name}" will be removed.</div>
+                    </div>
+                </div>
+            ),
+            acceptLabel: 'Delete',
+            rejectLabel: 'Cancel',
+            acceptIcon: 'pi pi-trash',
+            rejectIcon: 'pi pi-times',
+            acceptClassName: 'p-button-danger p-button-sm',
+            rejectClassName: 'p-button-text p-button-sm',
+            defaultFocus: 'reject',
+            accept: () => {
+                setRows((prev) => prev.filter((r) => r.id !== row.id));
+                if (editingId === row.id) resetForm();
+            },
+        });
     };
 
     const labelFor = (cat) => CATEGORY_OPTIONS.find((c) => c.value === cat)?.label ?? cat;
@@ -106,32 +161,62 @@ export default function UiPatternsPage() {
         SUBCATEGORY_OPTIONS[cat]?.find((s) => s.value === sub)?.label ?? sub;
     const statusLabelFor = (s) => STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
+    const actionsBody = (row) => (
+        <div className="flex gap-2">
+            <Button
+                icon="pi pi-pencil"
+                rounded
+                text
+                size="small"
+                aria-label="Edit"
+                onClick={() => onEdit(row)}
+            />
+            <Button
+                icon="pi pi-trash"
+                rounded
+                text
+                size="small"
+                severity="danger"
+                aria-label="Delete"
+                onClick={(e) => confirmDelete(e, row)}
+            />
+        </div>
+    );
     const dateBody = (row) => (row.date ? new Date(row.date).toLocaleDateString() : '');
     const statusBody = (row) => statusLabelFor(row.status);
     const categoriesBody = (row) =>
         row.categories.map((c) => labelFor(c.category)).join(', ');
-
     const subcategoriesBody = (row) =>
         row.categories
             .filter((c) => c.subcategory)
             .map((c) => <div key={c.category}>{subLabelFor(c.category, c.subcategory)}</div>);
 
+    const rowClassName = (row) => (row.id === editingId ? 'bg-yellow-100' : '');
+
     const canSave = form.name.trim() !== '' && form.categories.length > 0;
 
     return (
         <section>
+            <ConfirmPopup />
             <h1 className="text-2xl font-bold mb-3">UI Patterns</h1>
 
-            <DataTable value={rows} stripedRows emptyMessage="No rows yet." className="mb-5">
-                <Column field="id" header="ID" style={{ width: '4rem' }} />
-                <Column field="name" header="Name" />
-                <Column header="Date" body={dateBody} />
-                <Column header="Status" body={statusBody} />
-                <Column header="Categories" body={categoriesBody} />
-                <Column header="Subcategories" body={subcategoriesBody} />
-            </DataTable>
+            <BlockUI blocked={isEditing} className="mb-5">
+                <DataTable
+                    value={rows}
+                    stripedRows
+                    emptyMessage="No rows yet."
+                    rowClassName={rowClassName}
+                >
+                    <Column header="" body={actionsBody} style={{ width: '7rem' }} />
+                    <Column field="name" header="Name" />
+                    <Column header="Date" body={dateBody} />
+                    <Column header="Status" body={statusBody} />
+                    <Column header="Categories" body={categoriesBody} />
+                    <Column header="Subcategories" body={subcategoriesBody} />
+                </DataTable>
+            </BlockUI>
 
-            <h2 className="text-lg font-semibold mb-3">Add new</h2>
+            <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>
 
             <div className="flex flex-wrap gap-3 mb-6">
                 <div className="w-12rem">
@@ -174,6 +259,7 @@ export default function UiPatternsPage() {
                         optionLabel="label"
                         placeholder="Select categories"
                         display="comma"
+                        showSelectAll={false}
                         className="w-full p-inputtext-sm"
                     />
                 </div>
@@ -200,7 +286,23 @@ export default function UiPatternsPage() {
                 </div>
             )}
 
-            <Button label="Save" icon="pi pi-save" onClick={onSave} disabled={!canSave} />
+            <div className="flex gap-2">
+                <Button
+                    label={isEditing ? 'Update' : 'Save'}
+                    icon="pi pi-save"
+                    onClick={onSave}
+                    disabled={!canSave}
+                />
+                {isEditing && (
+                    <Button
+                        label="Cancel"
+                        icon="pi pi-times"
+                        severity="secondary"
+                        outlined
+                        onClick={resetForm}
+                    />
+                )}
+            </div>
         </section>
     );
 }
