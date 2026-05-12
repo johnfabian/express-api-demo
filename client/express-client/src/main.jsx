@@ -12,7 +12,13 @@ import './index.css';
 
 import { router } from './router.jsx';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: (failureCount, error) => error?.code !== 'NETWORK_ERROR' && failureCount < 3,
+        },
+    },
+});
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>

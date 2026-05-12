@@ -3,6 +3,16 @@ import { Link, Outlet } from 'react-router';
 
 const navItems = [
     {
+        label: 'UI Patterns',
+        icon: 'pi pi-th-large',
+        template: (item, options) => (
+            <Link to="/ui-patterns" className={options.className}>
+                <span className={item.icon} />
+                <span className="ml-2">{item.label}</span>
+            </Link>
+        ),
+    },
+    {
         label: 'Todos-Client',
         icon: 'pi pi-check-square',
         template: (item, options) => (

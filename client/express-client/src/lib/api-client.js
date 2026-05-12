@@ -11,14 +11,19 @@ export class ApiError extends Error {
 
 async function request(path, { body, headers, ...options } = {}) {
     const hasBody = body !== undefined;
-    const res = await fetch(`${API_URL}${path}`, {
-        ...options,
-        headers: {
-            ...(hasBody && { 'Content-Type': 'application/json' }),
-            ...headers,
-        },
-        body: hasBody ? JSON.stringify(body) : undefined,
-    });
+    let res;
+    try {
+        res = await fetch(`${API_URL}${path}`, {
+            ...options,
+            headers: {
+                ...(hasBody && { 'Content-Type': 'application/json' }),
+                ...headers,
+            },
+            body: hasBody ? JSON.stringify(body) : undefined,
+        });
+    } catch {
+        throw new ApiError('NETWORK_ERROR', `Cannot reach API at ${API_URL}. Is the server running?`);
+    }
 
     const payload = await res.json();
 

@@ -69,7 +69,13 @@ export default function TodosServerPagingPage() {
                     style={{ width: '20rem' }}
                 />
             </div>
-            {error && <Message severity="error" text={error.message} className="mb-3 w-full" />}
+            {error && (
+                <Message
+                    severity={error.code === 'NETWORK_ERROR' ? 'info' : 'error'}
+                    text={error.code === 'NETWORK_ERROR' ? 'Server not running — start it with `npm run dev:server` (or `npm run dev`) to load todos.' : error.message}
+                    className="mb-3 w-full"
+                />
+            )}
             <DataTable
                 value={data?.items ?? []}
                 loading={isFetching}
