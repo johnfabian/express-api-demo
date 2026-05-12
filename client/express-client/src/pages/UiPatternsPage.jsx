@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MultiSelect } from 'primereact/multiselect';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
@@ -8,6 +8,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { BlockUI } from 'primereact/blockui';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
+import { FilterMatchMode } from 'primereact/api';
 
 const CATEGORY_OPTIONS = [
     { value: 'electronics', label: 'Electronics' },
@@ -64,10 +65,19 @@ const EMPTY_FORM = {
     subSelections: {},
 };
 
+const INITIAL_FILTERS = {
+    name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    date: { value: null, matchMode: FilterMatchMode.DATE_IS },
+    status: { value: null, matchMode: FilterMatchMode.EQUALS },
+    categoriesText: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    subcategoriesText: { value: null, matchMode: FilterMatchMode.CONTAINS },
+};
+
 export default function UiPatternsPage() {
     const [form, setForm] = useState(EMPTY_FORM);
     const [rows, setRows] = useState([]);
     const [editingId, setEditingId] = useState(null);
+    const [filters, setFilters] = useState(INITIAL_FILTERS);
 
     const isEditing = editingId !== null;
 
@@ -193,6 +203,42 @@ export default function UiPatternsPage() {
 
     const rowClassName = (row) => (row.id === editingId ? 'bg-yellow-100' : '');
 
+    const enrichedRows = useMemo(
+        () =>
+            rows.map((r) => ({
+                ...r,
+                categoriesText: r.categories.map((c) => labelFor(c.category)).join(', '),
+                subcategoriesText: r.categories
+                    .filter((c) => c.subcategory)
+                    .map((c) => subLabelFor(c.category, c.subcategory))
+                    .join(', '),
+            })),
+        [rows],
+    );
+
+    const statusFilterElement = (options) => (
+        <Dropdown
+            value={options.value}
+            options={STATUS_OPTIONS}
+            optionLabel="label"
+            onChange={(e) => options.filterApplyCallback(e.value)}
+            placeholder="Any"
+            showClear
+            className="p-column-filter p-inputtext-sm"
+        />
+    );
+
+    const dateFilterElement = (options) => (
+        <Calendar
+            value={options.value}
+            onChange={(e) => options.filterApplyCallback(e.value)}
+            placeholder="Date"
+            dateFormat="mm/dd/yy"
+            className="p-column-filter"
+            inputClassName="p-inputtext-sm w-full"
+        />
+    );
+
     const canSave = form.name.trim() !== '' && form.categories.length > 0;
 
     return (
@@ -202,17 +248,61 @@ export default function UiPatternsPage() {
 
             <BlockUI blocked={isEditing} className="mb-5">
                 <DataTable
-                    value={rows}
+                    value={enrichedRows}
                     stripedRows
                     emptyMessage="No rows yet."
                     rowClassName={rowClassName}
+                    filters={filters}
+                    onFilter={(e) => setFilters(e.filters)}
+                    filterDisplay="row"
+                    filterDelay={300}
+                    removableSort
                 >
                     <Column header="" body={actionsBody} style={{ width: '7rem' }} />
-                    <Column field="name" header="Name" />
-                    <Column header="Date" body={dateBody} />
-                    <Column header="Status" body={statusBody} />
-                    <Column header="Categories" body={categoriesBody} />
-                    <Column header="Subcategories" body={subcategoriesBody} />
+                    <Column
+                        field="name"
+                        header="Name"
+                        sortable
+                        filter
+                        filterPlaceholder="Search"
+                        showFilterMenu={false}
+                    />
+                    <Column
+                        field="date"
+                        header="Date"
+                        body={dateBody}
+                        sortable
+                        filter
+                        filterElement={dateFilterElement}
+                        showFilterMenu={false}
+                    />
+                    <Column
+                        field="status"
+                        header="Status"
+                        body={statusBody}
+                        sortable
+                        filter
+                        filterElement={statusFilterElement}
+                        showFilterMenu={false}
+                    />
+                    <Column
+                        field="categoriesText"
+                        header="Categories"
+                        body={categoriesBody}
+                        sortable
+                        filter
+                        filterPlaceholder="Search"
+                        showFilterMenu={false}
+                    />
+                    <Column
+                        field="subcategoriesText"
+                        header="Subcategories"
+                        body={subcategoriesBody}
+                        sortable
+                        filter
+                        filterPlaceholder="Search"
+                        showFilterMenu={false}
+                    />
                 </DataTable>
             </BlockUI>
 
