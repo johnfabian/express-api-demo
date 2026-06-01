@@ -1,32 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Dropdown } from 'primereact/dropdown';
-import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { Calendar } from 'primereact/calendar';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { BlockUI } from 'primereact/blockui';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import { FilterMatchMode } from 'primereact/api';
-
-const CATEGORY_OPTIONS = [
-    { value: 'electronics', label: 'Electronics' },
-    { value: 'clothing', label: 'Clothing' },
-    { value: 'books', label: 'Books' },
-    { value: 'sports', label: 'Sports' },
-    { value: 'toys', label: 'Toys' },
-];
-
-const INVENTORY_OPTIONS = [
-    { value: 'in-stock', label: 'In Stock' },
-    { value: 'not-in-stock', label: 'Not In Stock' },
-];
-
-const STATUS_OPTIONS = [
-    { value: 'approved', label: 'Approved' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'in-progress', label: 'In Progress' },
-];
+import UIPatternsDataTable from '../components/uipatterns2/UIPatternsDataTable.jsx';
+import UIPatternsForm from '../components/uipatterns2/UIPatternsForm.jsx';
+import {
+    CATEGORY_OPTIONS,
+    inventoryLabelFor,
+    labelFor,
+} from '../components/uipatterns2/options.js';
 
 let nextCategoryRowId = 1;
 
@@ -97,16 +78,19 @@ export default function UIPatternsPage2() {
     };
 
     const removeCategoryRow = (rowId) => {
-        setForm((prev) => {
-            return {
-                ...prev,
-                categoryRows: prev.categoryRows.filter((row) => row.id !== rowId),
-            };
-        });
+        setForm((prev) => ({
+            ...prev,
+            categoryRows: prev.categoryRows.filter((row) => row.id !== rowId),
+        }));
+    };
+
+    const resetForm = () => {
+        setForm(createEmptyForm());
+        setEditingId(null);
     };
 
     const onSave = () => {
-        const built = {
+        const savedForm = {
             name: form.name,
             date: form.date,
             status: form.status,
@@ -119,17 +103,14 @@ export default function UIPatternsPage2() {
         };
 
         if (isEditing) {
-            setRows((prev) => prev.map((r) => (r.id === editingId ? { ...r, ...built } : r)));
+            setRows((prev) =>
+                prev.map((row) => (row.id === editingId ? { ...row, ...savedForm } : row)),
+            );
         } else {
             const nextId = rows.length ? rows[rows.length - 1].id + 1 : 1;
-            setRows((prev) => [...prev, { id: nextId, ...built }]);
+            setRows((prev) => [...prev, { id: nextId, ...savedForm }]);
         }
         resetForm();
-    };
-
-    const resetForm = () => {
-        setForm(createEmptyForm());
-        setEditingId(null);
     };
 
     const onEdit = (row) => {
@@ -138,10 +119,10 @@ export default function UIPatternsPage2() {
             date: row.date ? new Date(row.date) : null,
             status: row.status,
             categoryRows: row.categories.length
-                ? row.categories.map((c) =>
+                ? row.categories.map((category) =>
                       createCategoryRow({
-                          category: c.category,
-                          inventory: c.inventory ?? null,
+                          category: category.category,
+                          inventory: category.inventory ?? null,
                       }),
                   )
                 : [createCategoryRow()],
@@ -169,82 +150,23 @@ export default function UIPatternsPage2() {
             rejectClassName: 'p-button-text p-button-sm',
             defaultFocus: 'reject',
             accept: () => {
-                setRows((prev) => prev.filter((r) => r.id !== row.id));
+                setRows((prev) => prev.filter((existingRow) => existingRow.id !== row.id));
                 if (editingId === row.id) resetForm();
             },
         });
     };
 
-    const labelFor = (cat) => CATEGORY_OPTIONS.find((c) => c.value === cat)?.label ?? cat;
-    const inventoryLabelFor = (inventory) =>  INVENTORY_OPTIONS.find((option) => option.value === inventory)?.label ?? inventory;
-    const statusLabelFor = (s) => STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
-
-    const actionsBody = (row) => (
-        <div className="flex gap-2">
-            <Button
-                icon="pi pi-pencil"
-                rounded
-                text
-                size="small"
-                aria-label="Edit"
-                onClick={() => onEdit(row)}
-            />
-            <Button
-                icon="pi pi-trash"
-                rounded
-                text
-                size="small"
-                severity="danger"
-                aria-label="Delete"
-                onClick={(e) => confirmDelete(e, row)}
-            />
-        </div>
-    );
-    const dateBody = (row) => (row.date ? new Date(row.date).toLocaleDateString() : '');
-    const statusBody = (row) => statusLabelFor(row.status);
-    const categoriesBody = (row) =>
-        row.categories.map((c) => <div key={c.category}>{labelFor(c.category)}</div>);
-    const inventoryBody = (row) =>
-        row.categories
-            .filter((c) => c.inventory)
-            .map((c) => <div key={c.category}>{inventoryLabelFor(c.inventory)}</div>);
-
-    const rowClassName = (row) => (row.id === editingId ? 'ui-patterns-selected-row' : '');
-
-    const enrichedRows = useMemo(
+    const memoRows = useMemo(
         () =>
-            rows.map((r) => ({
-                ...r,
-                categoriesText: r.categories.map((c) => labelFor(c.category)).join(' '),
-                inventoryText: r.categories
-                    .filter((c) => c.inventory)
-                    .map((c) => inventoryLabelFor(c.inventory))
+            rows.map((row) => ({
+                ...row,
+                categoriesText: row.categories.map((category) => labelFor(category.category)).join(' '),
+                inventoryText: row.categories
+                    .filter((category) => category.inventory)
+                    .map((category) => inventoryLabelFor(category.inventory))
                     .join(', '),
             })),
         [rows],
-    );
-
-    const statusFilterElement = (options) => (
-        <Dropdown
-            value={options.value}
-            options={STATUS_OPTIONS}
-            optionLabel="label"
-            onChange={(e) => options.filterApplyCallback(e.value)}
-            placeholder="Any"
-            showClear
-            className="p-column-filter p-inputtext-sm"
-        />
-    );
-
-    const dateFilterElement = (options) => (
-        <Calendar
-            value={options.value}
-            onChange={(e) => options.filterApplyCallback(e.value)}
-            placeholder="Date"
-            dateFormat="mm/dd/yy"
-            className="p-column-filter"
-            inputClassName="p-inputtext-sm w-full"
-        />
     );
 
     const canSave = form.name.trim() !== '' && selectedCategoryCount > 0;
@@ -254,188 +176,31 @@ export default function UIPatternsPage2() {
             <ConfirmPopup />
             <h1 className="text-2xl font-bold mb-3">UI Patterns 2</h1>
 
-            <BlockUI blocked={isEditing} className="mb-5">
-                <DataTable
-                    className="ui-patterns-table"
-                    value={enrichedRows}
-                    stripedRows
-                    emptyMessage="No rows yet."
-                    rowClassName={rowClassName}
-                    filters={filters}
-                    onFilter={(e) => setFilters(e.filters)}
-                    filterDisplay="row"
-                    filterDelay={300}
-                    removableSort
-                >
-                    <Column header="" body={actionsBody} style={{ width: '7rem' }} />
-                    <Column
-                        field="name"
-                        header="Name"
-                        sortable
-                        filter
-                        filterPlaceholder="Search"
-                        showFilterMenu={false}
-                    />
-                    <Column
-                        field="date"
-                        header="Date"
-                        body={dateBody}
-                        sortable
-                        filter
-                        filterElement={dateFilterElement}
-                        showFilterMenu={false}
-                    />
-                    <Column
-                        field="status"
-                        header="Status"
-                        body={statusBody}
-                        sortable
-                        filter
-                        filterElement={statusFilterElement}
-                        showFilterMenu={false}
-                    />
-                    <Column
-                        field="categoriesText"
-                        header="Categories"
-                        body={categoriesBody}
-                        sortable
-                        filter
-                        filterPlaceholder="Search"
-                        showFilterMenu={false}
-                    />
-                    <Column
-                        field="inventoryText"
-                        header="Inventory"
-                        body={inventoryBody}
-                        sortable
-                        filter
-                        filterPlaceholder="Search"
-                        showFilterMenu={false}
-                    />
-                </DataTable>
-            </BlockUI>
+            <UIPatternsDataTable
+                rows={memoRows}
+                filters={filters}
+                editingId={editingId}
+                isEditing={isEditing}
+                onEdit={onEdit}
+                onDelete={confirmDelete}
+                onFilter={(e) => setFilters(e.filters)}
+            />
 
             <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>
 
-            <form
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    if (canSave) onSave();
-                }}
-            >
-                <div className="flex flex-wrap gap-3 mb-5">
-                    <div className="w-12rem">
-                        <label className="block mb-2 text-sm font-semibold">Name</label>
-                        <InputText
-                            value={form.name}
-                            onChange={(e) => setField('name', e.target.value)}
-                            placeholder="Enter a name"
-                            className="w-full p-inputtext-sm"
-                        />
-                    </div>
-                    <div className="w-12rem">
-                        <label className="block mb-2 text-sm font-semibold">Date</label>
-                        <Calendar
-                            value={form.date}
-                            onChange={(e) => setField('date', e.value)}
-                            placeholder="Select a date"
-                            className="w-full"
-                            inputClassName="p-inputtext-sm w-full"
-                        />
-                    </div>
-                    <div className="w-12rem">
-                        <label className="block mb-2 text-sm font-semibold">Status</label>
-                        <Dropdown
-                            value={form.status}
-                            onChange={(e) => setField('status', e.value)}
-                            options={STATUS_OPTIONS}
-                            optionLabel="label"
-                            placeholder="Select..."
-                            showClear
-                            className="w-full p-inputtext-sm"
-                        />
-                    </div>
-                </div>
-
-                <div className="flex flex-column gap-3 mb-6">
-                    {form.categoryRows.map((categoryRow, index) => (
-                        <div key={categoryRow.id} className="flex flex-wrap align-items-end gap-2">
-                            <div className="w-12rem">
-                                <label className="block mb-2 text-sm font-semibold">Category</label>
-                                <Dropdown
-                                    value={categoryRow.category}
-                                    onChange={(e) =>
-                                        onCategoryRowChange(categoryRow.id, 'category', e.value)
-                                    }
-                                    options={getCategoryOptions(categoryRow.id)}
-                                    optionLabel="label"
-                                    optionDisabled="disabled"
-                                    placeholder="Select category"
-                                    showClear
-                                    className="w-full p-inputtext-sm"
-                                />
-                            </div>
-                            <div className="w-12rem">
-                                <label className="block mb-2 text-sm font-semibold">
-                                    Inventory <span className="font-normal">(optional)</span>
-                                </label>
-                                <Dropdown
-                                    value={categoryRow.inventory}
-                                    onChange={(e) =>
-                                        onCategoryRowChange(categoryRow.id, 'inventory', e.value)
-                                    }
-                                    options={INVENTORY_OPTIONS}
-                                    optionLabel="label"
-                                    placeholder="Select inventory"
-                                    showClear
-                                    className="w-full p-inputtext-sm"
-                                />
-                            </div>
-                            {index === 0 && (
-                                <Button
-                                    type="button"
-                                    icon="pi pi-plus"
-                                    rounded
-                                    outlined
-                                    aria-label="Add category row"
-                                    onClick={addCategoryRow}
-                                    disabled={!canAddCategoryRow}
-                                />
-                            )}
-                            {index > 0 && (
-                                <Button
-                                    type="button"
-                                    icon="pi pi-trash"
-                                    rounded
-                                    text
-                                    severity="danger"
-                                    aria-label="Remove category row"
-                                    onClick={() => removeCategoryRow(categoryRow.id)}
-                                />
-                            )}
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex gap-2">
-                    <Button
-                        type="submit"
-                        label={isEditing ? 'Update' : 'Save'}
-                        icon="pi pi-save"
-                        disabled={!canSave}
-                    />
-                    {isEditing && (
-                        <Button
-                            type="button"
-                            label="Cancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            outlined
-                            onClick={resetForm}
-                        />
-                    )}
-                </div>
-            </form>
+            <UIPatternsForm
+                form={form}
+                isEditing={isEditing}
+                canSave={canSave}
+                canAddCategoryRow={canAddCategoryRow}
+                getCategoryOptions={getCategoryOptions}
+                onAddCategoryRow={addCategoryRow}
+                onCategoryRowChange={onCategoryRowChange}
+                onRemoveCategoryRow={removeCategoryRow}
+                onSave={onSave}
+                onSetField={setField}
+                onReset={resetForm}
+            />
         </section>
     );
 }
