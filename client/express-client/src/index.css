@@ -13,3 +13,7 @@ body {
 .p-datatable-loading-overlay {
     background: transparent !important;
 }
+
+.ui-patterns-table .p-datatable-tbody > tr.ui-patterns-selected-row > td {
+    background: #fef3c7 !important;
+}
