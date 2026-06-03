@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
-import { FilterMatchMode } from 'primereact/api';
 import UIPatternsDataTable3 from '../components/uipatterns3/UIPatternsDataTable3.jsx';
 import UIPatternsForm3 from '../components/uipatterns3/UIPatternsForm3.jsx';
 import {
@@ -18,19 +17,12 @@ const createEmptyForm = () => ({
     inventorySelections: {},
 });
 
-const INITIAL_FILTERS = {
-    name: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    date: { value: null, matchMode: FilterMatchMode.DATE_IS },
-    status: { value: null, matchMode: FilterMatchMode.EQUALS },
-    categoriesText: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    inventoryText: { value: null, matchMode: FilterMatchMode.CONTAINS },
-};
-
 export default function UIPatternsPage3() {
     const [form, setForm] = useState(createEmptyForm);
+
+    //NOTE: dont need this when saving to database, 
     const [dataTableRows, setDataTableRows] = useState([]);
     const [editingId, setEditingId] = useState(null);
-    const [filters, setFilters] = useState(INITIAL_FILTERS);
 
     const isEditing = editingId !== null;
 
@@ -176,12 +168,10 @@ export default function UIPatternsPage3() {
 
             <UIPatternsDataTable3
                 dataTableRows={memoDataTableRows}
-                filters={filters}
                 editingId={editingId}
                 isEditing={isEditing}
                 onEdit={onEdit}
                 onDelete={confirmDelete}
-                onFilter={(e) => setFilters(e.filters)}
             />
 
             <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>

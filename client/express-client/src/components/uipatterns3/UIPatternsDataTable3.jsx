@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { FilterMatchMode } from 'primereact/api';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
@@ -12,15 +14,23 @@ import {
     statusLabelFor,
 } from './options.js';
 
+const INITIAL_FILTERS = {
+    name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    date: { value: null, matchMode: FilterMatchMode.DATE_IS },
+    status: { value: null, matchMode: FilterMatchMode.EQUALS },
+    categoriesText: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    inventoryText: { value: null, matchMode: FilterMatchMode.CONTAINS },
+};
+
 export default function UIPatternsDataTable3({
     dataTableRows,
-    filters,
     editingId,
     isEditing,
     onEdit,
     onDelete,
-    onFilter,
 }) {
+    const [filters, setFilters] = useState(INITIAL_FILTERS);
+
     const actionsBody = (row) => (
         <div className="flex gap-2">
             <Button
@@ -90,7 +100,7 @@ export default function UIPatternsDataTable3({
                 emptyMessage="No rows yet."
                 rowClassName={rowClassName}
                 filters={filters}
-                onFilter={onFilter}
+                onFilter={(e) => setFilters(e.filters)}
                 filterDisplay="row"
                 filterDelay={300}
                 removableSort
