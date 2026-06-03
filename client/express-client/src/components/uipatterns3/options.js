@@ -18,11 +18,15 @@ export const STATUS_OPTIONS = [
     { value: 'in-progress', label: 'In Progress' },
 ];
 
+// PrimeReact may pass around either the full option or only option.value.
+// Normalize both cases to the nested value object used for saved rows.
 export const optionValueFor = (selected) =>
     selected && 'value' in selected && 'description' in selected ? selected.value : selected;
 
 export const optionIdFor = (selected) => optionValueFor(selected)?.id;
 
+// Saved rows store value objects, while display names live on the full options.
+// Match by id to recover the configured description.
 export const optionForValue = (options, selected) => {
     const value = optionValueFor(selected);
     return options.find((option) => option.value.id === value?.id) ?? null;
@@ -33,6 +37,8 @@ export const optionDisplayFor = (option) => {
     return option.description;
 };
 
+// Use the option description for UI labels, with shortDescription as a fallback
+// if a saved value no longer exists in the current option list.
 export const valueDisplayFor = (options, selected) => {
     const option = optionForValue(options, selected);
     if (option) return optionDisplayFor(option);
