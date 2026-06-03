@@ -28,7 +28,7 @@ const INITIAL_FILTERS = {
 
 export default function UIPatternsPage3() {
     const [form, setForm] = useState(createEmptyForm);
-    const [rows, setRows] = useState([]);
+    const [dataTableRows, setDataTableRows] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [filters, setFilters] = useState(INITIAL_FILTERS);
 
@@ -91,13 +91,17 @@ export default function UIPatternsPage3() {
             })),
         };
 
+        console.log("onSave - saved form", savedForm);
+
         if (isEditing) {
-            setRows((prev) =>
+            setDataTableRows((prev) =>
                 prev.map((row) => (row.id === editingId ? { ...row, ...savedForm } : row)),
             );
         } else {
-            const nextId = rows.length ? rows[rows.length - 1].id + 1 : 1;
-            setRows((prev) => [...prev, { id: nextId, ...savedForm }]);
+            const nextId = dataTableRows.length
+                ? dataTableRows[dataTableRows.length - 1].id + 1
+                : 1;
+            setDataTableRows((prev) => [...prev, { id: nextId, ...savedForm }]);
         }
         resetForm();
     };
@@ -140,15 +144,17 @@ export default function UIPatternsPage3() {
             rejectClassName: 'p-button-text p-button-sm',
             defaultFocus: 'reject',
             accept: () => {
-                setRows((prev) => prev.filter((existingRow) => existingRow.id !== row.id));
+                setDataTableRows((prev) =>
+                    prev.filter((existingRow) => existingRow.id !== row.id),
+                );
                 if (editingId === row.id) resetForm();
             },
         });
     };
 
-    const memoRows = useMemo(
+    const memoDataTableRows = useMemo(
         () =>
-            rows.map((row) => ({
+            dataTableRows.map((row) => ({
                 ...row,
                 categoriesText: row.categories
                     .map((category) => categoryLabelFor(category.category))
@@ -158,7 +164,7 @@ export default function UIPatternsPage3() {
                     .map((category) => inventoryLabelFor(category.inventory))
                     .join(', '),
             })),
-        [rows],
+        [dataTableRows],
     );
 
     const canSave = form.name.trim() !== '' && form.categories.length > 0;
@@ -169,7 +175,7 @@ export default function UIPatternsPage3() {
             <h1 className="text-2xl font-bold mb-3">UI Patterns 3</h1>
 
             <UIPatternsDataTable3
-                rows={memoRows}
+                dataTableRows={memoDataTableRows}
                 filters={filters}
                 editingId={editingId}
                 isEditing={isEditing}

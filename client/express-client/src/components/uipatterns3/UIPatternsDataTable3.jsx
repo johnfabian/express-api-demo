@@ -13,7 +13,7 @@ import {
 } from './options.js';
 
 export default function UIPatternsDataTable3({
-    rows,
+    dataTableRows,
     filters,
     editingId,
     isEditing,
@@ -85,7 +85,7 @@ export default function UIPatternsDataTable3({
         <BlockUI blocked={isEditing} className="mb-5">
             <DataTable
                 className="ui-patterns-table"
-                value={rows}
+                value={dataTableRows}
                 stripedRows
                 emptyMessage="No rows yet."
                 rowClassName={rowClassName}
