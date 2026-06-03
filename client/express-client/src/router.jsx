@@ -3,6 +3,7 @@ import MainLayout from './layouts/MainLayout.jsx';
 import TodosClientPagingPage from './pages/TodosClientPagingPage.jsx';
 import TodosServerPagingPage from './pages/TodosServerPagingPage.jsx';
 import UIPatternsPage2 from './pages/UIPatternsPage2.jsx';
+import UIPatternsPage3 from './pages/UIPatternsPage3.jsx';
 import UiPatternsPage from './pages/UiPatternsPage.jsx';
 
 export const router = createBrowserRouter([
@@ -13,6 +14,7 @@ export const router = createBrowserRouter([
             { index: true, element: <Navigate to="/ui-patterns" replace /> },
             { path: 'ui-patterns', Component: UiPatternsPage },
             { path: 'ui-patterns-2', Component: UIPatternsPage2 },
+            { path: 'ui-patterns-3', Component: UIPatternsPage3 },
             { path: 'todos-client', Component: TodosClientPagingPage },
             { path: 'todos-server', Component: TodosServerPagingPage },
         ],

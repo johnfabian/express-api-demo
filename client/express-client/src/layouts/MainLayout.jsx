@@ -27,6 +27,16 @@ const navItems = [
         ),
     },
     {
+        label: 'UI Patterns 3',
+        icon: 'pi pi-list-check',
+        template: (item, options) => (
+            <Link to="/ui-patterns-3" className={options.className}>
+                <span className={item.icon} />
+                <span className="ml-2">{item.label}</span>
+            </Link>
+        ),
+    },
+    {
         label: 'Todos-Client',
         icon: 'pi pi-check-square',
         template: (item, options) => (

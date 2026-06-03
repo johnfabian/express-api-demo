@@ -4,7 +4,7 @@ import { InputText } from 'primereact/inputtext';
 import { Calendar } from 'primereact/calendar';
 import { INVENTORY_OPTIONS, STATUS_OPTIONS } from './options.js';
 
-export default function UIPatternsForm({
+export default function UIPatternsForm2({
     form,
     isEditing,
     canSave,

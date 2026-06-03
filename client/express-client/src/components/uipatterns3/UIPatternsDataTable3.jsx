@@ -4,9 +4,15 @@ import { Calendar } from 'primereact/calendar';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { BlockUI } from 'primereact/blockui';
-import { STATUS_OPTIONS, inventoryLabelFor, labelFor, statusLabelFor } from './options.js';
+import {
+    STATUS_OPTIONS,
+    categoryLabelFor,
+    inventoryLabelFor,
+    optionIdFor,
+    statusLabelFor,
+} from './options.js';
 
-export default function UIPatternsDataTable({
+export default function UIPatternsDataTable3({
     rows,
     filters,
     editingId,
@@ -40,11 +46,15 @@ export default function UIPatternsDataTable({
     const dateBody = (row) => (row.date ? new Date(row.date).toLocaleDateString() : '');
     const statusBody = (row) => statusLabelFor(row.status);
     const categoriesBody = (row) =>
-        row.categories.map((c) => <div key={c.category}>{labelFor(c.category)}</div>);
+        row.categories.map((category) => categoryLabelFor(category.category)).join(', ');
     const inventoryBody = (row) =>
         row.categories
-            .filter((c) => c.inventory)
-            .map((c) => <div key={c.category}>{inventoryLabelFor(c.inventory)}</div>);
+            .filter((category) => category.inventory)
+            .map((category) => (
+                <div key={optionIdFor(category.category)}>
+                    {inventoryLabelFor(category.inventory)}
+                </div>
+            ));
 
     const rowClassName = (row) => (row.id === editingId ? 'ui-patterns-selected-row' : '');
 

@@ -1,28 +1,21 @@
 import { useMemo, useState } from 'react';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import { FilterMatchMode } from 'primereact/api';
-import UIPatternsDataTable2 from '../components/uipatterns2/UIPatternsDataTable2.jsx';
-import UIPatternsForm2 from '../components/uipatterns2/UIPatternsForm2.jsx';
+import UIPatternsDataTable3 from '../components/uipatterns3/UIPatternsDataTable3.jsx';
+import UIPatternsForm3 from '../components/uipatterns3/UIPatternsForm3.jsx';
 import {
-    CATEGORY_OPTIONS,
+    categoryLabelFor,
     inventoryLabelFor,
-    labelFor,
-} from '../components/uipatterns2/options.js';
-
-let nextCategoryRowId = 1;
-
-const createCategoryRow = (values = {}) => ({
-    id: nextCategoryRowId++,
-    category: null,
-    inventory: null,
-    ...values,
-});
+    optionIdFor,
+    optionValueFor,
+} from '../components/uipatterns3/options.js';
 
 const createEmptyForm = () => ({
     name: '',
     date: null,
     status: null,
-    categoryRows: [createCategoryRow()],
+    categories: [],
+    inventorySelections: {},
 });
 
 const INITIAL_FILTERS = {
@@ -33,7 +26,7 @@ const INITIAL_FILTERS = {
     inventoryText: { value: null, matchMode: FilterMatchMode.CONTAINS },
 };
 
-export default function UIPatternsPage2() {
+export default function UIPatternsPage3() {
     const [form, setForm] = useState(createEmptyForm);
     const [rows, setRows] = useState([]);
     const [editingId, setEditingId] = useState(null);
@@ -43,45 +36,43 @@ export default function UIPatternsPage2() {
 
     const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-    const selectedCategoryCount = form.categoryRows.filter((row) => row.category).length;
-    const canAddCategoryRow = form.categoryRows.length < CATEGORY_OPTIONS.length;
+    const onCategoriesChange = (categories) => {
+        const categoryValues = categories.map((category) => optionValueFor(category));
 
-    const getCategoryOptions = (rowId) => {
-        const selectedCategories = new Set(
-            form.categoryRows
-                .filter((row) => row.id !== rowId && row.category)
-                .map((row) => row.category),
-        );
+        setForm((prev) => {
+            const selectedIds = new Set(categoryValues.map((category) => String(category.id)));
+            const inventorySelections = Object.fromEntries(
+                Object.entries(prev.inventorySelections).filter(([categoryId]) =>
+                    selectedIds.has(categoryId),
+                ),
+            );
 
-        return CATEGORY_OPTIONS.map((option) => ({
-            ...option,
-            disabled: selectedCategories.has(option.value),
+            return { ...prev, categories: categoryValues, inventorySelections };
+        });
+    };
+
+    const onInventoryChange = (categoryId, inventory) => {
+        setForm((prev) => ({
+            ...prev,
+            inventorySelections: {
+                ...prev.inventorySelections,
+                [categoryId]: inventory ?? null,
+            },
         }));
     };
 
-    const onCategoryRowChange = (rowId, key, value) => {
-        setForm((prev) => ({
-            ...prev,
-            categoryRows: prev.categoryRows.map((row) => {
-                if (row.id !== rowId) return row;
-                if (key === 'category') return { ...row, category: value, inventory: null };
-                return { ...row, [key]: value };
-            }),
-        }));
-    };
+    const onCategoryRemove = (categoryToRemove) => {
+        const removedId = optionIdFor(categoryToRemove);
 
-    const addCategoryRow = () => {
-        setForm((prev) => ({
-            ...prev,
-            categoryRows: [...prev.categoryRows, createCategoryRow()],
-        }));
-    };
+        setForm((prev) => {
+            const categories = prev.categories.filter(
+                (category) => optionIdFor(category) !== removedId,
+            );
+            const inventorySelections = { ...prev.inventorySelections };
+            delete inventorySelections[removedId];
 
-    const removeCategoryRow = (rowId) => {
-        setForm((prev) => ({
-            ...prev,
-            categoryRows: prev.categoryRows.filter((row) => row.id !== rowId),
-        }));
+            return { ...prev, categories, inventorySelections };
+        });
     };
 
     const resetForm = () => {
@@ -94,12 +85,10 @@ export default function UIPatternsPage2() {
             name: form.name,
             date: form.date,
             status: form.status,
-            categories: form.categoryRows
-                .filter((row) => row.category)
-                .map((row) => ({
-                    category: row.category,
-                    inventory: row.inventory ?? null,
-                })),
+            categories: form.categories.map((category) => ({
+                category: optionValueFor(category),
+                inventory: form.inventorySelections[optionIdFor(category)] ?? null,
+            })),
         };
 
         if (isEditing) {
@@ -114,18 +103,19 @@ export default function UIPatternsPage2() {
     };
 
     const onEdit = (row) => {
+        const inventorySelections = {};
+        for (const category of row.categories) {
+            if (category.inventory) {
+                inventorySelections[optionIdFor(category.category)] = category.inventory;
+            }
+        }
+
         setForm({
             name: row.name,
             date: row.date ? new Date(row.date) : null,
             status: row.status,
-            categoryRows: row.categories.length
-                ? row.categories.map((category) =>
-                      createCategoryRow({
-                          category: category.category,
-                          inventory: category.inventory ?? null,
-                      }),
-                  )
-                : [createCategoryRow()],
+            categories: row.categories.map((category) => category.category),
+            inventorySelections,
         });
         setEditingId(row.id);
     };
@@ -160,7 +150,9 @@ export default function UIPatternsPage2() {
         () =>
             rows.map((row) => ({
                 ...row,
-                categoriesText: row.categories.map((category) => labelFor(category.category)).join(' '),
+                categoriesText: row.categories
+                    .map((category) => categoryLabelFor(category.category))
+                    .join(' '),
                 inventoryText: row.categories
                     .filter((category) => category.inventory)
                     .map((category) => inventoryLabelFor(category.inventory))
@@ -169,14 +161,14 @@ export default function UIPatternsPage2() {
         [rows],
     );
 
-    const canSave = form.name.trim() !== '' && selectedCategoryCount > 0;
+    const canSave = form.name.trim() !== '' && form.categories.length > 0;
 
     return (
         <section>
             <ConfirmPopup />
-            <h1 className="text-2xl font-bold mb-3">UI Patterns 2</h1>
+            <h1 className="text-2xl font-bold mb-3">UI Patterns 3</h1>
 
-            <UIPatternsDataTable2
+            <UIPatternsDataTable3
                 rows={memoRows}
                 filters={filters}
                 editingId={editingId}
@@ -188,15 +180,13 @@ export default function UIPatternsPage2() {
 
             <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>
 
-            <UIPatternsForm2
+            <UIPatternsForm3
                 form={form}
                 isEditing={isEditing}
                 canSave={canSave}
-                canAddCategoryRow={canAddCategoryRow}
-                getCategoryOptions={getCategoryOptions}
-                onAddCategoryRow={addCategoryRow}
-                onCategoryRowChange={onCategoryRowChange}
-                onRemoveCategoryRow={removeCategoryRow}
+                onCategoriesChange={onCategoriesChange}
+                onCategoryRemove={onCategoryRemove}
+                onInventoryChange={onInventoryChange}
                 onSave={onSave}
                 onSetField={setField}
                 onReset={resetForm}
