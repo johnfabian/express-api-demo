@@ -1,5 +1,3 @@
-import { picklistHelper } from './picklistHelper.js';
-
 export const CATEGORY_OPTIONS = [
     { description: 'Electronics', value: { id: 1, shortDescription: 'ELEC', active: true } },
     { description: 'Clothing', value: { id: 2, shortDescription: 'CLO', active: true } },
@@ -20,10 +18,6 @@ export const STATUS_OPTIONS = [
     { value: 'in-progress', label: 'In Progress' },
 ];
 
-export const getCategoryLabel = (category) =>
-    picklistHelper.getSelectedLabel(CATEGORY_OPTIONS, category, 'description');
-
-export const getInventoryLabel = (inventory) =>
-    picklistHelper.getSelectedLabel(INVENTORY_OPTIONS, inventory, 'description');
-
-export const getStatusLabel = (status) => picklistHelper.getSelectedLabel(STATUS_OPTIONS, status);
+export const getCategoryOptions = async () => CATEGORY_OPTIONS;
+export const getInventoryOptions = async () => INVENTORY_OPTIONS;
+export const getStatusOptions = async () => STATUS_OPTIONS;

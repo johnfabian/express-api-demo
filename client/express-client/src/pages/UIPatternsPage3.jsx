@@ -1,12 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import UIPatternsDataTable3 from '../components/uipatterns3/UIPatternsDataTable3.jsx';
 import UIPatternsForm3 from '../components/uipatterns3/UIPatternsForm3.jsx';
 import {
-    getCategoryLabel,
-    getInventoryLabel,
-} from '../components/uipatterns3/options.js';
-import { picklistHelper } from '../components/uipatterns3/picklistHelper.js';
+    getCategoryOptions,
+    getInventoryOptions,
+    getStatusOptions,
+} from '../components/uipatterns3/api.js';
+import {
+    getOptionLabel,
+    getValueId,
+} from '../components/uipatterns3/picklistHelper.js';
 
 const createEmptyForm = () => ({
     name: '',
@@ -16,113 +20,106 @@ const createEmptyForm = () => ({
     inventorySelections: {},
 });
 
+const createFormValuesFromRow = (row) => {
+    if (!row) return createEmptyForm();
+
+    const inventorySelections = {};
+    for (const category of row.categories) {
+        if (category.inventory) {
+            inventorySelections[getValueId(category.category)] = category.inventory;
+        }
+    }
+
+    return {
+        name: row.name,
+        date: row.date ? new Date(row.date) : null,
+        status: row.status,
+        categories: row.categories.map((category) => category.category),
+        inventorySelections,
+    };
+};
+
 export default function UIPatternsPage3() {
-    const [form, setForm] = useState(createEmptyForm);
+    const categoriesOptionsRef = useRef([]);
+    const inventoryOptionsRef = useRef([]);
+    const statusOptionsRef = useRef([]);
+    const [categoryOptions, setCategoryOptions] = useState([]);
+    const [inventoryOptions, setInventoryOptions] = useState([]);
+    const [statusOptions, setStatusOptions] = useState([]);
 
     //NOTE: dont need this when saving to database, 
     const [dataTableRows, setDataTableRows] = useState([]);
     const [editingId, setEditingId] = useState(null);
 
     const isEditing = editingId !== null;
+    const editingRow = useMemo(
+        () => dataTableRows.find((row) => row.id === editingId) ?? null,
+        [dataTableRows, editingId],
+    );
+    const initialFormValues = useMemo(
+        () => createFormValuesFromRow(editingRow),
+        [editingRow],
+    );
 
-    const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+    useEffect(() => {
+        let ignore = false;
 
-    const onCategoriesChange = (categories) => {
-        const categoryValues = categories.map((category) =>
-            picklistHelper.getSelectedValue(category, 'description'),
-        );
+        const initialize = async () => {
+            const [categoriesData, inventoryData, statusData] = await Promise.all([
+                getCategoryOptions(),
+                getInventoryOptions(),
+                getStatusOptions(),
+            ]);
 
-        setForm((prev) => {
-            const selectedIds = new Set(categoryValues.map((category) => String(category.id)));
-            const inventorySelections = Object.fromEntries(
-                Object.entries(prev.inventorySelections).filter(([categoryId]) =>
-                    selectedIds.has(categoryId),
-                ),
-            );
+            if (ignore) return;
 
-            return { ...prev, categories: categoryValues, inventorySelections };
-        });
-    };
+            categoriesOptionsRef.current = categoriesData;
+            inventoryOptionsRef.current = inventoryData;
+            statusOptionsRef.current = statusData;
 
-    const onInventoryChange = (categoryId, inventory) => {
-        setForm((prev) => ({
-            ...prev,
-            inventorySelections: {
-                ...prev.inventorySelections,
-                [categoryId]: inventory ?? null,
-            },
-        }));
-    };
+            setCategoryOptions(categoriesData);
+            setInventoryOptions(inventoryData);
+            setStatusOptions(statusData);
+        };
 
-    const onCategoryRemove = (categoryToRemove) => {
-        const removedId = picklistHelper.getSelectedId(
-            categoryToRemove,
-            'description',
-        );
+        initialize();
 
-        setForm((prev) => {
-            const categories = prev.categories.filter(
-                (category) =>
-                    picklistHelper.getSelectedId(category, 'description') !== removedId,
-            );
-            const inventorySelections = { ...prev.inventorySelections };
-            delete inventorySelections[removedId];
-
-            return { ...prev, categories, inventorySelections };
-        });
-    };
+        return () => {
+            ignore = true;
+        };
+    }, []);
 
     const resetForm = () => {
-        setForm(createEmptyForm());
         setEditingId(null);
     };
 
-    const onSave = () => {
-        const savedForm = {
+    const onSave = (form) => {
+        const payload = {
             name: form.name,
             date: form.date,
             status: form.status,
             categories: form.categories.map((category) => ({
-                category: picklistHelper.getSelectedValue(category, 'description'),
-                inventory:
-                    form.inventorySelections[
-                        picklistHelper.getSelectedId(category, 'description')
-                    ] ?? null,
+                category,
+                inventory: form.inventorySelections[getValueId(category)] ?? null,
             })),
         };
 
-        console.log("onSave - saved form", savedForm);
+        console.log("onSave - saved form", payload);
 
         if (isEditing) {
             setDataTableRows((prev) =>
-                prev.map((row) => (row.id === editingId ? { ...row, ...savedForm } : row)),
+                prev.map((row) => (row.id === editingId ? { ...row, ...payload } : row)),
             );
         } else {
             const nextId = dataTableRows.length
                 ? dataTableRows[dataTableRows.length - 1].id + 1
                 : 1;
-            setDataTableRows((prev) => [...prev, { id: nextId, ...savedForm }]);
+            setDataTableRows((prev) => [...prev, { id: nextId, ...payload }]);
         }
         resetForm();
     };
 
     const onEdit = (row) => {
-        const inventorySelections = {};
-        for (const category of row.categories) {
-            if (category.inventory) {
-                inventorySelections[
-                    picklistHelper.getSelectedId(category.category, 'description')
-                ] = category.inventory;
-            }
-        }
-
-        setForm({
-            name: row.name,
-            date: row.date ? new Date(row.date) : null,
-            status: row.status,
-            categories: row.categories.map((category) => category.category),
-            inventorySelections,
-        });
         setEditingId(row.id);
     };
 
@@ -159,17 +156,19 @@ export default function UIPatternsPage3() {
             dataTableRows.map((row) => ({
                 ...row,
                 categoriesText: row.categories
-                    .map((category) => getCategoryLabel(category.category))
+                    .map((category) =>
+                        getOptionLabel(categoryOptions, category.category, 'description'),
+                    )
                     .join(' '),
                 inventoryText: row.categories
                     .filter((category) => category.inventory)
-                    .map((category) => getInventoryLabel(category.inventory))
+                    .map((category) =>
+                        getOptionLabel(inventoryOptions, category.inventory, 'description'),
+                    )
                     .join(', '),
             })),
-        [dataTableRows],
+        [categoryOptions, dataTableRows, inventoryOptions],
     );
-
-    const canSave = form.name.trim() !== '' && form.categories.length > 0;
 
     return (
         <section>
@@ -178,6 +177,9 @@ export default function UIPatternsPage3() {
 
             <UIPatternsDataTable3
                 dataTableRows={memoDataTableRows}
+                categoryOptions={categoryOptions}
+                inventoryOptions={inventoryOptions}
+                statusOptions={statusOptions}
                 editingId={editingId}
                 isEditing={isEditing}
                 onEdit={onEdit}
@@ -187,14 +189,12 @@ export default function UIPatternsPage3() {
             <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>
 
             <UIPatternsForm3
-                form={form}
+                categoryOptions={categoryOptions}
+                inventoryOptions={inventoryOptions}
+                statusOptions={statusOptions}
+                initialValues={initialFormValues}
                 isEditing={isEditing}
-                canSave={canSave}
-                onCategoriesChange={onCategoriesChange}
-                onCategoryRemove={onCategoryRemove}
-                onInventoryChange={onInventoryChange}
                 onSave={onSave}
-                onSetField={setField}
                 onReset={resetForm}
             />
         </section>

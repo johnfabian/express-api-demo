@@ -7,12 +7,9 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { BlockUI } from 'primereact/blockui';
 import {
-    STATUS_OPTIONS,
-    getCategoryLabel,
-    getInventoryLabel,
-    getStatusLabel,
-} from './options.js';
-import { picklistHelper } from './picklistHelper.js';
+    getOptionLabel,
+    getValueId,
+} from './picklistHelper.js';
 
 const INITIAL_FILTERS = {
     name: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -24,6 +21,9 @@ const INITIAL_FILTERS = {
 
 export default function UIPatternsDataTable3({
     dataTableRows,
+    categoryOptions,
+    inventoryOptions,
+    statusOptions,
     editingId,
     isEditing,
     onEdit,
@@ -54,20 +54,19 @@ export default function UIPatternsDataTable3({
     );
 
     const dateBody = (row) => (row.date ? new Date(row.date).toLocaleDateString() : '');
-    const statusBody = (row) => getStatusLabel(row.status);
+    const statusBody = (row) => getOptionLabel(statusOptions, row.status);
     const categoriesBody = (row) =>
-        row.categories.map((category) => getCategoryLabel(category.category)).join(', ');
+        row.categories
+            .map((category) =>
+                getOptionLabel(categoryOptions, category.category, 'description'),
+            )
+            .join(', ');
     const inventoryBody = (row) =>
         row.categories
             .filter((category) => category.inventory)
             .map((category) => (
-                <div
-                    key={picklistHelper.getSelectedId(
-                        category.category,
-                        'description',
-                    )}
-                >
-                    {getInventoryLabel(category.inventory)}
+                <div key={getValueId(category.category)}>
+                    {getOptionLabel(inventoryOptions, category.inventory, 'description')}
                 </div>
             ));
 
@@ -76,7 +75,7 @@ export default function UIPatternsDataTable3({
     const statusFilterElement = (options) => (
         <Dropdown
             value={options.value}
-            options={STATUS_OPTIONS}
+            options={statusOptions}
             optionLabel="label"
             onChange={(e) => options.filterApplyCallback(e.value)}
             placeholder="Any"
