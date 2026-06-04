@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import UIPatternsDataTable3 from '../components/uipatterns3/UIPatternsDataTable3.jsx';
 import UIPatternsForm3 from '../components/uipatterns3/UIPatternsForm3.jsx';
@@ -20,6 +21,12 @@ const createEmptyForm = () => ({
     inventorySelections: {},
 });
 
+const EMPTY_OPTIONS = {
+    categoryOptions: [],
+    inventoryOptions: [],
+    statusOptions: [],
+};
+
 const createFormValuesFromRow = (row) => {
     if (!row) return createEmptyForm();
 
@@ -40,12 +47,26 @@ const createFormValuesFromRow = (row) => {
 };
 
 export default function UIPatternsPage3() {
-    const categoriesOptionsRef = useRef([]);
-    const inventoryOptionsRef = useRef([]);
-    const statusOptionsRef = useRef([]);
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [inventoryOptions, setInventoryOptions] = useState([]);
-    const [statusOptions, setStatusOptions] = useState([]);
+    const {
+        data: options = EMPTY_OPTIONS,
+        isLoading: isLoadingOptions,
+    } = useQuery({
+        queryKey: ['ui-patterns-3-options'],
+        queryFn: async () => {
+            const [categoryOptions, inventoryOptions, statusOptions] = await Promise.all([
+                getCategoryOptions(),
+                getInventoryOptions(),
+                getStatusOptions(),
+            ]);
+
+            return { categoryOptions, inventoryOptions, statusOptions };
+        },
+        // Load lookup options once and keep them cached unless manually refreshed.
+        staleTime: Infinity,
+        gcTime: Infinity,
+    });
+
+    const { categoryOptions, inventoryOptions, statusOptions } = options;
 
     //NOTE: dont need this when saving to database, 
     const [dataTableRows, setDataTableRows] = useState([]);
@@ -60,34 +81,6 @@ export default function UIPatternsPage3() {
         () => createFormValuesFromRow(editingRow),
         [editingRow],
     );
-
-    useEffect(() => {
-        let ignore = false;
-
-        const initialize = async () => {
-            const [categoriesData, inventoryData, statusData] = await Promise.all([
-                getCategoryOptions(),
-                getInventoryOptions(),
-                getStatusOptions(),
-            ]);
-
-            if (ignore) return;
-
-            categoriesOptionsRef.current = categoriesData;
-            inventoryOptionsRef.current = inventoryData;
-            statusOptionsRef.current = statusData;
-
-            setCategoryOptions(categoriesData);
-            setInventoryOptions(inventoryData);
-            setStatusOptions(statusData);
-        };
-
-        initialize();
-
-        return () => {
-            ignore = true;
-        };
-    }, []);
 
     const resetForm = () => {
         setEditingId(null);
@@ -175,28 +168,32 @@ export default function UIPatternsPage3() {
             <ConfirmPopup />
             <h1 className="text-2xl font-bold mb-3">UI Patterns 3</h1>
 
-            <UIPatternsDataTable3
-                dataTableRows={memoDataTableRows}
-                categoryOptions={categoryOptions}
-                inventoryOptions={inventoryOptions}
-                statusOptions={statusOptions}
-                editingId={editingId}
-                isEditing={isEditing}
-                onEdit={onEdit}
-                onDelete={confirmDelete}
-            />
+            {!isLoadingOptions && (
+                <>
+                    <UIPatternsDataTable3
+                        dataTableRows={memoDataTableRows}
+                        categoryOptions={categoryOptions}
+                        inventoryOptions={inventoryOptions}
+                        statusOptions={statusOptions}
+                        editingId={editingId}
+                        isEditing={isEditing}
+                        onEdit={onEdit}
+                        onDelete={confirmDelete}
+                    />
 
-            <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>
+                    <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>
 
-            <UIPatternsForm3
-                categoryOptions={categoryOptions}
-                inventoryOptions={inventoryOptions}
-                statusOptions={statusOptions}
-                initialValues={initialFormValues}
-                isEditing={isEditing}
-                onSave={onSave}
-                onReset={resetForm}
-            />
+                    <UIPatternsForm3
+                        categoryOptions={categoryOptions}
+                        inventoryOptions={inventoryOptions}
+                        statusOptions={statusOptions}
+                        initialValues={initialFormValues}
+                        isEditing={isEditing}
+                        onSave={onSave}
+                        onReset={resetForm}
+                    />
+                </>
+            )}
         </section>
     );
 }
