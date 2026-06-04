@@ -27,6 +27,14 @@ export default function UIPatternsCategoriesList3({
 
     return (
         <div className="flex flex-column gap-3 mb-6">
+            <div className="flex flex-wrap align-items-end gap-2">
+                <div className="w-12rem">
+                    <label className="text-sm font-semibold">Category</label>
+                </div>
+                <div className="w-16rem">
+                    <label className="text-sm font-semibold">Inventory</label>
+                </div>
+            </div>
             {categories.map((category) => {
                 const categoryId = getValueId(category);
                 const categoryLabel = getOptionLabel(
@@ -37,16 +45,10 @@ export default function UIPatternsCategoriesList3({
 
                 return (
                     <div key={categoryId} className="flex flex-wrap align-items-end gap-2">
-                        <div className="w-12rem">
-                            <label className="block mb-2 text-sm font-semibold">
-                                Category
-                            </label>
+                        <div className="w-12rem">                            
                             <div className="text-sm line-height-3 py-2">{categoryLabel}</div>
                         </div>
-                        <div className="w-16rem">
-                            <label className="block mb-2 text-sm font-semibold">
-                                Inventory <span className="font-normal">(optional)</span>
-                            </label>
+                        <div className="w-16rem">                           
                             <Controller
                                 name={`inventorySelections.${categoryId}`}
                                 control={control}

@@ -179,9 +179,7 @@ export default function UIPatternsPage3() {
                         isEditing={isEditing}
                         onEdit={onEdit}
                         onDelete={confirmDelete}
-                    />
-
-                    <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit' : 'Add new'}</h2>
+                    />                 
 
                     <UIPatternsForm3
                         categoryOptions={categoryOptions}
