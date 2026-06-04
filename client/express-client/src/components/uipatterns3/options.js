@@ -1,3 +1,5 @@
+import { picklistHelper } from './picklistHelper.js';
+
 export const CATEGORY_OPTIONS = [
     { description: 'Electronics', value: { id: 1, shortDescription: 'ELEC', active: true } },
     { description: 'Clothing', value: { id: 2, shortDescription: 'CLO', active: true } },
@@ -18,40 +20,10 @@ export const STATUS_OPTIONS = [
     { value: 'in-progress', label: 'In Progress' },
 ];
 
-// PrimeReact may pass around either the full option or only option.value.
-// Normalize both cases to the nested value object used for saved rows.
-export const optionValueFor = (selected) =>
-    selected && 'value' in selected && 'description' in selected ? selected.value : selected;
+export const getCategoryLabel = (category) =>
+    picklistHelper.getSelectedLabel(CATEGORY_OPTIONS, category, 'description');
 
-export const optionIdFor = (selected) => optionValueFor(selected)?.id;
+export const getInventoryLabel = (inventory) =>
+    picklistHelper.getSelectedLabel(INVENTORY_OPTIONS, inventory, 'description');
 
-// Saved rows store value objects, while display names live on the full options.
-// Match by id to recover the configured description.
-export const optionForValue = (options, selected) => {
-    const value = optionValueFor(selected);
-    return options.find((option) => option.value.id === value?.id) ?? null;
-};
-
-export const optionDisplayFor = (option) => {
-    if (!option) return '';
-    return option.description;
-};
-
-// Use the option description for UI labels, with shortDescription as a fallback
-// if a saved value no longer exists in the current option list.
-export const valueDisplayFor = (options, selected) => {
-    const option = optionForValue(options, selected);
-    if (option) return optionDisplayFor(option);
-
-    const value = optionValueFor(selected);
-    if (!value) return '';
-
-    return value.shortDescription;
-};
-
-export const categoryLabelFor = (category) => valueDisplayFor(CATEGORY_OPTIONS, category);
-
-export const inventoryLabelFor = (inventory) => valueDisplayFor(INVENTORY_OPTIONS, inventory);
-
-export const statusLabelFor = (status) =>
-    STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+export const getStatusLabel = (status) => picklistHelper.getSelectedLabel(STATUS_OPTIONS, status);

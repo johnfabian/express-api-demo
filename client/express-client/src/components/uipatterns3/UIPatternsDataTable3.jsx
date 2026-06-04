@@ -8,11 +8,11 @@ import { Column } from 'primereact/column';
 import { BlockUI } from 'primereact/blockui';
 import {
     STATUS_OPTIONS,
-    categoryLabelFor,
-    inventoryLabelFor,
-    optionIdFor,
-    statusLabelFor,
+    getCategoryLabel,
+    getInventoryLabel,
+    getStatusLabel,
 } from './options.js';
+import { picklistHelper } from './picklistHelper.js';
 
 const INITIAL_FILTERS = {
     name: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -54,15 +54,20 @@ export default function UIPatternsDataTable3({
     );
 
     const dateBody = (row) => (row.date ? new Date(row.date).toLocaleDateString() : '');
-    const statusBody = (row) => statusLabelFor(row.status);
+    const statusBody = (row) => getStatusLabel(row.status);
     const categoriesBody = (row) =>
-        row.categories.map((category) => categoryLabelFor(category.category)).join(', ');
+        row.categories.map((category) => getCategoryLabel(category.category)).join(', ');
     const inventoryBody = (row) =>
         row.categories
             .filter((category) => category.inventory)
             .map((category) => (
-                <div key={optionIdFor(category.category)}>
-                    {inventoryLabelFor(category.inventory)}
+                <div
+                    key={picklistHelper.getSelectedId(
+                        category.category,
+                        'description',
+                    )}
+                >
+                    {getInventoryLabel(category.inventory)}
                 </div>
             ));
 

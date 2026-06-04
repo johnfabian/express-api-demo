@@ -3,11 +3,10 @@ import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import UIPatternsDataTable3 from '../components/uipatterns3/UIPatternsDataTable3.jsx';
 import UIPatternsForm3 from '../components/uipatterns3/UIPatternsForm3.jsx';
 import {
-    categoryLabelFor,
-    inventoryLabelFor,
-    optionIdFor,
-    optionValueFor,
+    getCategoryLabel,
+    getInventoryLabel,
 } from '../components/uipatterns3/options.js';
+import { picklistHelper } from '../components/uipatterns3/picklistHelper.js';
 
 const createEmptyForm = () => ({
     name: '',
@@ -29,7 +28,9 @@ export default function UIPatternsPage3() {
     const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
     const onCategoriesChange = (categories) => {
-        const categoryValues = categories.map((category) => optionValueFor(category));
+        const categoryValues = categories.map((category) =>
+            picklistHelper.getSelectedValue(category, 'description'),
+        );
 
         setForm((prev) => {
             const selectedIds = new Set(categoryValues.map((category) => String(category.id)));
@@ -54,11 +55,15 @@ export default function UIPatternsPage3() {
     };
 
     const onCategoryRemove = (categoryToRemove) => {
-        const removedId = optionIdFor(categoryToRemove);
+        const removedId = picklistHelper.getSelectedId(
+            categoryToRemove,
+            'description',
+        );
 
         setForm((prev) => {
             const categories = prev.categories.filter(
-                (category) => optionIdFor(category) !== removedId,
+                (category) =>
+                    picklistHelper.getSelectedId(category, 'description') !== removedId,
             );
             const inventorySelections = { ...prev.inventorySelections };
             delete inventorySelections[removedId];
@@ -78,8 +83,11 @@ export default function UIPatternsPage3() {
             date: form.date,
             status: form.status,
             categories: form.categories.map((category) => ({
-                category: optionValueFor(category),
-                inventory: form.inventorySelections[optionIdFor(category)] ?? null,
+                category: picklistHelper.getSelectedValue(category, 'description'),
+                inventory:
+                    form.inventorySelections[
+                        picklistHelper.getSelectedId(category, 'description')
+                    ] ?? null,
             })),
         };
 
@@ -102,7 +110,9 @@ export default function UIPatternsPage3() {
         const inventorySelections = {};
         for (const category of row.categories) {
             if (category.inventory) {
-                inventorySelections[optionIdFor(category.category)] = category.inventory;
+                inventorySelections[
+                    picklistHelper.getSelectedId(category.category, 'description')
+                ] = category.inventory;
             }
         }
 
@@ -149,11 +159,11 @@ export default function UIPatternsPage3() {
             dataTableRows.map((row) => ({
                 ...row,
                 categoriesText: row.categories
-                    .map((category) => categoryLabelFor(category.category))
+                    .map((category) => getCategoryLabel(category.category))
                     .join(' '),
                 inventoryText: row.categories
                     .filter((category) => category.inventory)
-                    .map((category) => inventoryLabelFor(category.inventory))
+                    .map((category) => getInventoryLabel(category.inventory))
                     .join(', '),
             })),
         [dataTableRows],

@@ -7,19 +7,18 @@ import {
     CATEGORY_OPTIONS,
     INVENTORY_OPTIONS,
     STATUS_OPTIONS,
-    categoryLabelFor,
-    inventoryLabelFor,
-    optionDisplayFor,
-    optionForValue,
-    optionIdFor,
+    getCategoryLabel,
+    getInventoryLabel,
 } from './options.js';
+import { picklistHelper } from './picklistHelper.js';
 
-const optionTemplate = (option) => <span>{optionDisplayFor(option)}</span>;
+const optionTemplate = (option) => (
+    <span>{picklistHelper.getSelectedLabel([], option, 'description')}</span>
+);
 
 const selectedInventoryTemplate = (value) => {
     if (!value) return <span>Select inventory</span>;
-    const option = optionForValue(INVENTORY_OPTIONS, value);
-    return <span>{option ? optionDisplayFor(option) : inventoryLabelFor(value)}</span>;
+    return <span>{getInventoryLabel(value)}</span>;
 };
 
 export default function UIPatternsForm3({
@@ -95,7 +94,10 @@ export default function UIPatternsForm3({
             {form.categories.length > 0 && (
                 <div className="flex flex-column gap-3 mb-6">
                     {form.categories.map((category) => {
-                        const categoryId = optionIdFor(category);
+                        const categoryId = picklistHelper.getSelectedId(
+                            category,
+                            'description',
+                        );
 
                         return (
                             <div key={categoryId} className="flex flex-wrap align-items-end gap-2">
@@ -104,7 +106,7 @@ export default function UIPatternsForm3({
                                         Category
                                     </label>
                                     <div className="text-sm line-height-3 py-2">
-                                        {categoryLabelFor(category)}
+                                        {getCategoryLabel(category)}
                                     </div>
                                 </div>
                                 <div className="w-16rem">
@@ -131,7 +133,7 @@ export default function UIPatternsForm3({
                                     rounded
                                     text
                                     severity="danger"
-                                    aria-label={`Remove ${categoryLabelFor(category)}`}
+                                    aria-label={`Remove ${getCategoryLabel(category)}`}
                                     onClick={() => onCategoryRemove(category)}
                                 />
                             </div>
