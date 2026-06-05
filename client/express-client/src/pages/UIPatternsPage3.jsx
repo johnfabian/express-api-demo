@@ -71,6 +71,7 @@ export default function UIPatternsPage3() {
     //NOTE: dont need this when saving to database, 
     const [dataTableRows, setDataTableRows] = useState([]);
     const [editingId, setEditingId] = useState(null);
+    const [formVersion, setFormVersion] = useState(0);
 
     const isEditing = editingId !== null;
     const editingRow = useMemo(
@@ -84,6 +85,7 @@ export default function UIPatternsPage3() {
 
     const resetForm = () => {
         setEditingId(null);
+        setFormVersion((prev) => prev + 1);
     };
 
     const onSave = (form) => {
@@ -182,6 +184,7 @@ export default function UIPatternsPage3() {
                     />                 
 
                     <ProductsForm
+                        key={editingId ?? `new-${formVersion}`}
                         categoryOptions={categoryOptions}
                         inventoryOptions={inventoryOptions}
                         statusOptions={statusOptions}

@@ -45,6 +45,7 @@ export default function UIPatternsPage2() {
     const [isLoading, setIsLoading] = useState(true);
     const [dataTableRows, setDataTableRows] = useState([]);
     const [editingId, setEditingId] = useState(null);
+    const [formVersion, setFormVersion] = useState(0);
 
     const loadCategoryOptions = useCallback(
         () =>
@@ -104,6 +105,7 @@ export default function UIPatternsPage2() {
 
     const resetForm = () => {
         setEditingId(null);
+        setFormVersion((prev) => prev + 1);
     };
 
     const onSave = (form) => {
@@ -185,7 +187,7 @@ export default function UIPatternsPage2() {
                     </h2>
 
                     <UIPatternsForm2
-                        key={editingId ?? 'new'}
+                        key={editingId ?? `new-${formVersion}`}
                         initialValues={initialFormValues}
                         isEditing={isEditing}
                         onSave={onSave}

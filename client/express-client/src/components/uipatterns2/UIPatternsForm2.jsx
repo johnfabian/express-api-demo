@@ -13,14 +13,6 @@ const optionTemplate = (option) => (
     <span>{option.description}</span>
 );
 
-const createEmptyForm = () => ({
-    name: '',
-    date: null,
-    status: null,
-    categories: [],
-    inventorySelections: {},
-});
-
 const pruneInventorySelections = (inventorySelections, selectedCategoryIds) => {
     const nextInventorySelections = {};
 
@@ -46,7 +38,6 @@ export default function UIPatternsForm2({
         control,
         getValues,
         handleSubmit,
-        reset,
         setValue,
     } = useForm({
         defaultValues: initialValues,
@@ -95,20 +86,8 @@ export default function UIPatternsForm2({
         });
     };
 
-    const onSubmit = (values) => {
-        if (!canSave) return;
-
-        onSave(values);
-        reset(createEmptyForm());
-    };
-
-    const onCancel = () => {
-        reset(createEmptyForm());
-        onReset();
-    };
-
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSave)}>
             <div className="flex flex-wrap gap-3 mb-5">
                 <div className="w-12rem">
                     <label className="block mb-2 text-sm font-semibold">Name</label>
@@ -214,7 +193,7 @@ export default function UIPatternsForm2({
                         icon="pi pi-times"
                         severity="secondary"
                         outlined
-                        onClick={onCancel}
+                        onClick={onReset}
                     />
                 )}
             </div>
