@@ -31,3 +31,17 @@ createRoot(document.getElementById('root')).render(
         </QueryClientProvider>
     </StrictMode>,
 );
+
+const showApp = () => {
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            document.body.classList.remove('app-loading');
+        });
+    });
+};
+
+if (document.readyState === 'complete') {
+    showApp();
+} else {
+    window.addEventListener('load', showApp, { once: true });
+}
