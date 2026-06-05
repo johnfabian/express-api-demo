@@ -2,16 +2,16 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import UIPatternsDataTable3 from '../components/uipatterns3/UIPatternsDataTable3.jsx';
-import UIPatternsForm3 from '../components/uipatterns3/UIPatternsForm3.jsx';
+import ProductsForm from '../components/ProductsForm.jsx';
 import {
     getCategoryOptions,
     getInventoryOptions,
     getStatusOptions,
-} from '../components/uipatterns3/api.js';
+} from '../lib/ui-patterns-api.js';
 import {
     getOptionLabel,
     getValueId,
-} from '../components/uipatterns3/picklistHelper.js';
+} from '../lib/picklist-helper.js';
 
 const createEmptyForm = () => ({
     name: '',
@@ -181,7 +181,7 @@ export default function UIPatternsPage3() {
                         onDelete={confirmDelete}
                     />                 
 
-                    <UIPatternsForm3
+                    <ProductsForm
                         categoryOptions={categoryOptions}
                         inventoryOptions={inventoryOptions}
                         statusOptions={statusOptions}

@@ -9,7 +9,7 @@ import { BlockUI } from 'primereact/blockui';
 import {
     getOptionLabel,
     getValueId,
-} from './picklistHelper.js';
+} from '../../lib/picklist-helper.js';
 
 const INITIAL_FILTERS = {
     name: { value: null, matchMode: FilterMatchMode.CONTAINS },

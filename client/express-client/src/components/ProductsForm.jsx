@@ -7,8 +7,8 @@ import { InputText } from 'primereact/inputtext';
 import { Calendar } from 'primereact/calendar';
 import {
     getValueId,
-} from './picklistHelper.js';
-import UIPatternsCategoriesList3 from './UIPatternsCategoriesList3.jsx';
+} from '../lib/picklist-helper.js';
+import CategoriesList from './CategoriesList.jsx';
 
 const optionTemplate = (option) => (
     <span>{option.description}</span>
@@ -34,7 +34,7 @@ const pruneInventorySelections = (inventorySelections, selectedCategoryIds) => {
     return nextInventorySelections;
 };
 
-export default function UIPatternsForm3({
+export default function ProductsForm({
     categoryOptions,
     inventoryOptions,
     statusOptions,
@@ -193,7 +193,7 @@ export default function UIPatternsForm3({
                 </div>
             </div>
 
-            <UIPatternsCategoriesList3
+            <CategoriesList
                 categories={categories}
                 categoryOptions={categoryOptions}
                 control={control}

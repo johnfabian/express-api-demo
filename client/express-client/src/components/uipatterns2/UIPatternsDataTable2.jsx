@@ -1,20 +1,57 @@
+import { useMemo, useState } from 'react';
+import { FilterMatchMode } from 'primereact/api';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { BlockUI } from 'primereact/blockui';
-import { STATUS_OPTIONS, inventoryLabelFor, labelFor, statusLabelFor } from './options.js';
+import {
+    getOptionLabel,
+    getValueId,
+} from '../../lib/picklist-helper.js';
+
+const INITIAL_FILTERS = {
+    name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    date: { value: null, matchMode: FilterMatchMode.DATE_IS },
+    status: { value: null, matchMode: FilterMatchMode.EQUALS },
+    categoriesText: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    inventoryText: { value: null, matchMode: FilterMatchMode.CONTAINS },
+};
 
 export default function UIPatternsDataTable2({
-    rows,
-    filters,
+    dataTableRows,
     editingId,
     isEditing,
     onEdit,
     onDelete,
-    onFilter,
+    refAllCategoryOptions,
+    refAllInventoryOptions,
+    refAllStatusOptions,
 }) {
+    const [filters, setFilters] = useState(INITIAL_FILTERS);
+    const categoryOptions = refAllCategoryOptions.current;
+    const inventoryOptions = refAllInventoryOptions.current;
+    const statusOptions = refAllStatusOptions.current;
+    const tableRows = useMemo(
+        () =>
+            dataTableRows.map((row) => ({
+                ...row,
+                categoriesText: row.categories
+                    .map((category) =>
+                        getOptionLabel(categoryOptions, category.category, 'description'),
+                    )
+                    .join(' '),
+                inventoryText: row.categories
+                    .filter((category) => category.inventory)
+                    .map((category) =>
+                        getOptionLabel(inventoryOptions, category.inventory, 'description'),
+                    )
+                    .join(', '),
+            })),
+        [categoryOptions, dataTableRows, inventoryOptions],
+    );
+
     const actionsBody = (row) => (
         <div className="flex gap-2">
             <Button
@@ -38,20 +75,28 @@ export default function UIPatternsDataTable2({
     );
 
     const dateBody = (row) => (row.date ? new Date(row.date).toLocaleDateString() : '');
-    const statusBody = (row) => statusLabelFor(row.status);
+    const statusBody = (row) => getOptionLabel(statusOptions, row.status);
     const categoriesBody = (row) =>
-        row.categories.map((c) => <div key={c.category}>{labelFor(c.category)}</div>);
+        row.categories
+            .map((category) =>
+                getOptionLabel(categoryOptions, category.category, 'description'),
+            )
+            .join(', ');
     const inventoryBody = (row) =>
         row.categories
-            .filter((c) => c.inventory)
-            .map((c) => <div key={c.category}>{inventoryLabelFor(c.inventory)}</div>);
+            .filter((category) => category.inventory)
+            .map((category) => (
+                <div key={getValueId(category.category)}>
+                    {getOptionLabel(inventoryOptions, category.inventory, 'description')}
+                </div>
+            ));
 
     const rowClassName = (row) => (row.id === editingId ? 'ui-patterns-selected-row' : '');
 
     const statusFilterElement = (options) => (
         <Dropdown
             value={options.value}
-            options={STATUS_OPTIONS}
+            options={statusOptions}
             optionLabel="label"
             onChange={(e) => options.filterApplyCallback(e.value)}
             placeholder="Any"
@@ -75,12 +120,12 @@ export default function UIPatternsDataTable2({
         <BlockUI blocked={isEditing} className="mb-5">
             <DataTable
                 className="ui-patterns-table"
-                value={rows}
+                value={tableRows}
                 stripedRows
                 emptyMessage="No rows yet."
                 rowClassName={rowClassName}
                 filters={filters}
-                onFilter={onFilter}
+                onFilter={(e) => setFilters(e.filters)}
                 filterDisplay="row"
                 filterDelay={300}
                 removableSort

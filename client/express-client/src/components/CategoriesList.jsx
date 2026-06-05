@@ -4,7 +4,7 @@ import { Button } from 'primereact/button';
 import {
     getOptionLabel,
     getValueId,
-} from './picklistHelper.js';
+} from '../lib/picklist-helper.js';
 
 const optionTemplate = (option) => (
     <span>{option.description}</span>
@@ -15,7 +15,7 @@ const selectedInventoryTemplate = (inventoryOptions, value) => {
     return <span>{getOptionLabel(inventoryOptions, value, 'description')}</span>;
 };
 
-export default function UIPatternsCategoriesList3({
+export default function CategoriesList({
     categories,
     categoryOptions,
     control,
@@ -45,10 +45,10 @@ export default function UIPatternsCategoriesList3({
 
                 return (
                     <div key={categoryId} className="flex flex-wrap align-items-end gap-2">
-                        <div className="w-12rem">                            
+                        <div className="w-12rem">
                             <div className="text-sm line-height-3 py-2">{categoryLabel}</div>
                         </div>
-                        <div className="w-16rem">                           
+                        <div className="w-16rem">
                             <Controller
                                 name={`inventorySelections.${categoryId}`}
                                 control={control}
