@@ -1,22 +1,17 @@
-import { useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { MultiSelect } from 'primereact/multiselect';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Calendar } from 'primereact/calendar';
 import {
-    getOptionLabel,
     getValueId,
 } from '../../lib/picklist-helper.js';
+import CategoriesList from '../CategoriesList.jsx';
 
 const optionTemplate = (option) => (
     <span>{option.description}</span>
 );
-
-const selectedInventoryTemplate = (inventoryOptions, value) => {
-    if (!value) return <span>Select inventory</span>;
-    return <span>{getOptionLabel(inventoryOptions, value, 'description')}</span>;
-};
 
 const createEmptyForm = () => ({
     name: '',
@@ -47,189 +42,163 @@ export default function UIPatternsForm2({
     refAllInventoryOptions,
     refAllStatusOptions,
 }) {
-    const [form, setForm] = useState(initialValues);
+    const {
+        control,
+        getValues,
+        handleSubmit,
+        reset,
+        setValue,
+    } = useForm({
+        defaultValues: initialValues,
+        mode: 'onChange',
+    });
+
     const categoryOptions = refAllCategoryOptions.current;
     const inventoryOptions = refAllInventoryOptions.current;
     const statusOptions = refAllStatusOptions.current;
-    const canSave = form.name.trim() !== '' && form.categories.length > 0;
+    const name = useWatch({ control, name: 'name' }) ?? '';
+    const categories = useWatch({ control, name: 'categories' }) ?? [];
+    const inventorySelections = useWatch({ control, name: 'inventorySelections' }) ?? {};
+    const canSave = name.trim() !== '' && categories.length > 0;
 
-    const setField = (key, value) => {
-        setForm((prev) => ({ ...prev, [key]: value }));
-    };
-
-    const onCategoriesChange = (nextCategories) => {
+    const onCategoriesChange = (nextCategories, onChange) => {
         const categoryValues = nextCategories ?? [];
         const selectedCategoryIds = categoryValues.map((category) => String(getValueId(category)));
+        const currentInventorySelections = getValues('inventorySelections') ?? {};
 
-        setForm((prev) => ({
-            ...prev,
-            categories: categoryValues,
-            inventorySelections: pruneInventorySelections(
-                prev.inventorySelections,
-                selectedCategoryIds,
-            ),
-        }));
-    };
-
-    const onInventoryChange = (category, value) => {
-        const categoryId = String(getValueId(category));
-
-        setForm((prev) => {
-            const inventorySelections = { ...prev.inventorySelections };
-
-            if (value) {
-                inventorySelections[categoryId] = value;
-            } else {
-                delete inventorySelections[categoryId];
-            }
-
-            return { ...prev, inventorySelections };
-        });
+        onChange(categoryValues);
+        setValue(
+            'inventorySelections',
+            pruneInventorySelections(currentInventorySelections, selectedCategoryIds),
+            {
+                shouldDirty: true,
+                shouldValidate: true,
+            },
+        );
     };
 
     const onCategoryRemove = (categoryToRemove) => {
         const removedId = getValueId(categoryToRemove);
+        const nextCategories = categories.filter(
+            (category) => getValueId(category) !== removedId,
+        );
+        const nextInventorySelections = { ...getValues('inventorySelections') };
+        delete nextInventorySelections[removedId];
 
-        setForm((prev) => {
-            const nextInventorySelections = { ...prev.inventorySelections };
-            delete nextInventorySelections[removedId];
-
-            return {
-                ...prev,
-                categories: prev.categories.filter(
-                    (category) => getValueId(category) !== removedId,
-                ),
-                inventorySelections: nextInventorySelections,
-            };
+        setValue('categories', nextCategories, {
+            shouldDirty: true,
+            shouldValidate: true,
+        });
+        setValue('inventorySelections', nextInventorySelections, {
+            shouldDirty: true,
+            shouldValidate: true,
         });
     };
 
-    const resetForm = () => {
-        setForm(createEmptyForm());
+    const onSubmit = (values) => {
+        if (!canSave) return;
+
+        onSave(values);
+        reset(createEmptyForm());
+    };
+
+    const onCancel = () => {
+        reset(createEmptyForm());
         onReset();
     };
 
-    const onSubmit = (event) => {
-        event.preventDefault();
-        if (!canSave) return;
-
-        onSave(form);
-        setForm(createEmptyForm());
-    };
-
     return (
-        <form onSubmit={onSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-wrap gap-3 mb-5">
                 <div className="w-12rem">
                     <label className="block mb-2 text-sm font-semibold">Name</label>
-                    <InputText
-                        value={form.name}
-                        onChange={(e) => setField('name', e.target.value)}
-                        placeholder="Enter a name"
-                        className="w-full p-inputtext-sm"
+                    <Controller
+                        name="name"
+                        control={control}
+                        rules={{ validate: (value) => (value ?? '').trim() !== '' }}
+                        render={({ field }) => (
+                            <InputText
+                                value={field.value}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                onBlur={field.onBlur}
+                                placeholder="Enter a name"
+                                className="w-full p-inputtext-sm"
+                            />
+                        )}
                     />
                 </div>
                 <div className="w-12rem">
                     <label className="block mb-2 text-sm font-semibold">Date</label>
-                    <Calendar
-                        value={form.date}
-                        onChange={(e) => setField('date', e.value)}
-                        placeholder="Select a date"
-                        className="w-full"
-                        inputClassName="p-inputtext-sm w-full"
+                    <Controller
+                        name="date"
+                        control={control}
+                        render={({ field }) => (
+                            <Calendar
+                                value={field.value}
+                                onChange={(e) => field.onChange(e.value)}
+                                onBlur={field.onBlur}
+                                placeholder="Select a date"
+                                className="w-full"
+                                inputClassName="p-inputtext-sm w-full"
+                            />
+                        )}
                     />
                 </div>
                 <div className="w-12rem">
                     <label className="block mb-2 text-sm font-semibold">Status</label>
-                    <Dropdown
-                        value={form.status}
-                        onChange={(e) => setField('status', e.value)}
-                        options={statusOptions}
-                        optionLabel="label"
-                        placeholder="Select..."
-                        showClear
-                        className="w-full p-inputtext-sm"
+                    <Controller
+                        name="status"
+                        control={control}
+                        render={({ field }) => (
+                            <Dropdown
+                                value={field.value}
+                                onChange={(e) => field.onChange(e.value)}
+                                onBlur={field.onBlur}
+                                options={statusOptions}
+                                optionLabel="label"
+                                placeholder="Select..."
+                                showClear
+                                className="w-full p-inputtext-sm"
+                            />
+                        )}
                     />
                 </div>
                 <div className="w-30rem">
                     <label className="block mb-2 text-sm font-semibold">Categories</label>
-                    <MultiSelect
-                        value={form.categories}
-                        onChange={(e) => onCategoriesChange(e.value)}
-                        options={categoryOptions}
-                        optionLabel="description"
-                        optionValue="value"
-                        dataKey="id"
-                        itemTemplate={optionTemplate}
-                        placeholder="Select categories"
-                        display="chip"
-                        maxSelectedLabels={3}
-                        selectedItemsLabel="..."
-                        showSelectAll={false}
-                        className="w-full p-inputtext-sm"
+                    <Controller
+                        name="categories"
+                        control={control}
+                        rules={{ validate: (value) => (value ?? []).length > 0 }}
+                        render={({ field }) => (
+                            <MultiSelect
+                                value={field.value}
+                                onChange={(e) => onCategoriesChange(e.value, field.onChange)}
+                                onBlur={field.onBlur}
+                                options={categoryOptions}
+                                optionLabel="description"
+                                optionValue="value"
+                                dataKey="id"
+                                itemTemplate={optionTemplate}
+                                placeholder="Select categories"
+                                display="chip"
+                                maxSelectedLabels={3}
+                                selectedItemsLabel="..."
+                                showSelectAll={false}
+                                className="w-full p-inputtext-sm"
+                            />
+                        )}
                     />
                 </div>
             </div>
 
-            {form.categories.length > 0 && (
-                <div className="flex flex-column gap-3 mb-6">
-                    <div className="flex flex-wrap align-items-end gap-2">
-                        <div className="w-12rem">
-                            <label className="text-sm font-semibold">Category</label>
-                        </div>
-                        <div className="w-16rem">
-                            <label className="text-sm font-semibold">Inventory</label>
-                        </div>
-                    </div>
-                    {form.categories.map((category) => {
-                        const categoryId = getValueId(category);
-                        const categoryLabel = getOptionLabel(
-                            categoryOptions,
-                            category,
-                            'description',
-                        );
-
-                        return (
-                            <div
-                                key={categoryId}
-                                className="flex flex-wrap align-items-end gap-2"
-                            >
-                                <div className="w-12rem">
-                                    <div className="text-sm line-height-3 py-2">
-                                        {categoryLabel}
-                                    </div>
-                                </div>
-                                <div className="w-16rem">
-                                    <Dropdown
-                                        value={form.inventorySelections[categoryId] ?? null}
-                                        onChange={(e) => onInventoryChange(category, e.value)}
-                                        options={inventoryOptions}
-                                        optionLabel="description"
-                                        optionValue="value"
-                                        dataKey="id"
-                                        itemTemplate={optionTemplate}
-                                        valueTemplate={(value) =>
-                                            selectedInventoryTemplate(inventoryOptions, value)
-                                        }
-                                        placeholder="Select inventory"
-                                        showClear
-                                        className="w-full p-inputtext-sm"
-                                    />
-                                </div>
-                                <Button
-                                    type="button"
-                                    icon="pi pi-trash"
-                                    rounded
-                                    text
-                                    severity="danger"
-                                    aria-label={`Remove ${categoryLabel}`}
-                                    onClick={() => onCategoryRemove(category)}
-                                />
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+            <CategoriesList
+                categories={categories}
+                categoryOptions={categoryOptions}
+                control={control}
+                inventoryOptions={inventoryOptions}
+                inventorySelections={inventorySelections}
+                onCategoryRemove={onCategoryRemove}
+            />
 
             <div className="flex gap-2">
                 <Button
@@ -245,7 +214,7 @@ export default function UIPatternsForm2({
                         icon="pi pi-times"
                         severity="secondary"
                         outlined
-                        onClick={resetForm}
+                        onClick={onCancel}
                     />
                 )}
             </div>
